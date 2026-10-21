@@ -1,13 +1,13 @@
 {
   "domain": "ortsnetz_auslastung",
-  "name": "Ortsnetz-Auslastung",
+  "name": "Ortsnetz-Auslastung Beta",
   "codeowners": [
     "@thomaslehmann1234"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung",
+  "documentation": "https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung_beta",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung/issues",
+  "issue_tracker": "https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung_beta/issues",
   "requirements": [],
-  "version": "0.5.0"
+  "version": "0.6.0b1"
 }

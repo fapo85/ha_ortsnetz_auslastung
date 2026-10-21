@@ -1,4 +1,17 @@
-# Ortsnetz-Auslastung für Home-Assistant-Admins
+# Ortsnetz-Auslastung Beta für Home-Assistant-Admins
+
+> **Beta 0.6.0b1:** Entwicklungsstand zum Testen der neuen optionalen Messfelder. Die stabile Integration bleibt unter [ha_ortsnetz_auslastung](https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung) verfügbar.
+
+## Hinweise zum Beta-Test
+
+- Vor der Installation die Home-Assistant-Konfiguration und die bisherigen Integrationsdateien sichern. Eine separate HA-Testinstanz ist empfohlen.
+- Beta und Stable verwenden denselben Ordner und dieselbe Domain `ortsnetz_auslastung`. Sie können nicht parallel in derselben HA-Instanz installiert sein. Die bestehende Integration nicht löschen; ihre Konfiguration und Entitäts-IDs sollen erhalten bleiben.
+- HACS darf nicht beide Repositories gleichzeitig als Installationsquelle derselben Integration verwalten. Beim Wechsel die Installationsquelle gezielt auf Beta umstellen; nicht beide Versionen übereinander aktualisieren lassen.
+- Ohne GitHub-Releases verwendet HACS den Standardbranch `main`. Für den Test ist kein Release erforderlich; nach Aktualisierungen der Beta-Dateien Home Assistant neu starten.
+- Die Integration sendet sofort nach dem Start und danach alle fünf Minuten an die konfigurierte API. Nur reale Messwerte senden und pro Messquelle nur einen aktiven Sender betreiben. Keine Testwerte an die produktive API schicken.
+- Zum Rückwechsel die stabile Installationsquelle und die gesicherten Dateien wiederherstellen und Home Assistant neu starten. Die bestehende Integration und ihre Entitäten nicht löschen.
+
+Domain, Sensor-IDs und gespeicherte Einstellungen bleiben unverändert. Der Beta-Name kennzeichnet nur den installierten Entwicklungsstand.
 
 Diese Anleitung richtet sich an Personen, die eine Home-Assistant-Instanz betreuen. Die HACS-Integration sendet die drei Phasenspannungen L1, L2 und L3 sowie den Standort deiner Instanz an die Ortsnetz-Auslastung-API. Nach dem ersten Senden werden die Werte alle fünf Minuten übertragen.
 
@@ -21,15 +34,15 @@ Beim Einrichten legt die Integration zusätzlich die Entitäten **Netzspannungss
 
 Die Integration ist nicht für Werte wie `unknown`, `unavailable` oder Text geeignet. In diesem Fall wird die betreffende Übertragung übersprungen und in den Home-Assistant-Protokollen vermerkt.
 
-Measured phase voltages must be between 150 and 300 V. A selected sensor reporting exactly `-1` excludes that phase from evaluation. At least one phase must provide a valid voltage; other invalid or unavailable values still prevent transmission. Excluded phases appear as `unavailable` in the `L1`, `L2` and `L3` status attributes. The overall status and battery recommendation remain available for the measured phases.
+Gemessene Phasenspannungen müssen zwischen 150 und 300 V liegen. Liefert ein ausgewählter Sensor genau `-1`, wird diese Phase von der Auswertung ausgeschlossen. Mindestens eine Phase muss eine gültige Spannung liefern; andere ungültige oder nicht verfügbare Werte verhindern weiterhin die Übertragung. Ausgeschlossene Phasen erscheinen als `unavailable` in den Statusattributen `L1`, `L2` und `L3`. Gesamtstatus und Batteriespeicherempfehlung bleiben für die gemessenen Phasen verfügbar.
 
-For example, sensor values `230`, `-1`, `-1` submit a single-phase measurement. All three sensor fields still require a sensor entity; `-1` is the sensor state, not an entity ID to enter in the configuration dialog.
+Die Sensorwerte `230`, `-1`, `-1` ergeben beispielsweise eine einphasige Messung. Alle drei Sensorfelder benötigen weiterhin eine Sensor-Entität; `-1` ist der Sensorzustand und keine Entitäts-ID für den Konfigurationsdialog.
 
 > **Wichtig:** Wähle für L1, L2 und L3 immer die Spannungs-Sensoren des Smartmeters deiner PV-Anlage aus. Wähle auch die Netzfrequenz bevorzugt vom selben Smartmeter. Andere Spannungs- oder Frequenzwerte, etwa von Steckdosen, Wechselrichtern oder einzelnen Geräten, bilden die Netzqualität am Anschluss nicht zuverlässig ab und dürfen nicht verwendet werden.
 
 ## 1. Integration über HACS herunterladen
 
-[![Open your Home Assistant instance and open this repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomaslehmann1234&repository=ha_ortsnetz_auslastung&category=integration)
+[![Dieses Beta-Repository in HACS öffnen.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomaslehmann1234&repository=ha_ortsnetz_auslastung_beta&category=integration)
 
 Mit dem Button wird dieses Repository direkt in HACS geöffnet. Alternativ manuell:
 
@@ -39,11 +52,11 @@ Mit dem Button wird dieses Repository direkt in HACS geöffnet. Alternativ manue
 4. Trage als Repository-URL ein:
 
    ```text
-   https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung
+   https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung_beta
    ```
 
 5. Wähle als Kategorie **Integration** und bestätige mit **Hinzufügen**.
-6. Suche nach **Ortsnetz-Auslastung** und wähle **Herunterladen**.
+6. Suche nach **Ortsnetz-Auslastung Beta** und wähle **Herunterladen**.
 
 ## 2. Home Assistant neu starten
 
@@ -59,7 +72,7 @@ Warte, bis Home Assistant wieder vollständig erreichbar ist.
 
 1. Öffne **Einstellungen → Geräte & Dienste**.
 2. Klicke auf **Integration hinzufügen**.
-3. Suche nach **Ortsnetz-Auslastung**.
+3. Suche nach **Ortsnetz-Auslastung Beta**.
 4. Fülle die Felder aus:
 
    | Feld | Wert |
@@ -72,9 +85,26 @@ Warte, bis Home Assistant wieder vollständig erreichbar ist.
    | PV-Forecast heute (kWh) | Optionaler Forecast-Sensor für den erwarteten PV-Ertrag des aktuellen Tages; wird nur mit konfigurierter Anlagengröße übertragen |
    | Smartmeter Hersteller / Typ | Optionaler Freitext, z. B. Hersteller und Modell des Smartmeters. Er wird nur im Adminbereich der Ortsnetz-Auslastung angezeigt. |
    | Netzfrequenz (Hz) | Frequenz-Sensor des Smartmeters, dessen Wert in Hertz geliefert wird |
+   | Batterie-Ladezustand / SOC (%) | Optionaler Sensor für den aktuellen Ladezustand, 0 bis 100 % |
+   | Nutzbare Batteriekapazität (kWh) | Optional. Tatsächliche nutzbare Kapazität eintragen, nicht den aktuellen Energieinhalt. Kein Wert ist vorbelegt. |
+   | Netzleistung gesamt (W) | Optionaler Sensor für die gesamte Wirkleistung am Hausanschluss: positiv = Netzbezug, negativ = Einspeisung |
    | Breitengrad / Längengrad | Standardmäßig der Home-Assistant-Standort; bei Bedarf überschreiben |
 
 5. Bestätige die Einrichtung.
+
+SOC, Batteriekapazität und Netzleistung sind für alle Nutzer direkt sichtbar und ausdrücklich optional. Die übrigen neuen Angaben stehen im standardmäßig eingeklappten Bereich **Weitere Messfelder (optional)**. Dieser lässt sich bei der Einrichtung und später unter **Konfigurieren** aufklappen:
+
+| Weitere Messfelder | Auswahl |
+| --- | --- |
+| Leistungsfaktor gesamt | Vorhandener Sensor mit einem Wert von 0 bis 1 oder in Prozent |
+| Scheinleistung gesamt | Vorhandener Sensor in VA oder kVA |
+| Stromstärke L1, L2, L3 | Je ein vorhandener Sensor in A oder mA |
+| Spannung L1, L2, L3: Minimum, Maximum, Mittelwert | Je ein vorhandener 5-Minuten-Statistiksensor in V |
+| Netzfrequenz: Minimum, Maximum, Mittelwert | Je ein vorhandener 5-Minuten-Statistiksensor in Hz |
+
+Alle Felder können leer bleiben. Die Integration liest nur die zugeordneten Sensorzustände und fragt keine zusätzlichen Geräte ab. Sie berechnet keine eigenen Min/Max/Mittelwerte; die ausgewählten Statistiksensoren müssen diese über dasselbe fünfminütige Messintervall liefern. Netzleistung darf nicht durch Wechselrichterleistung oder die Leistung nur einer Phase ersetzt werden. Sensoren mit umgekehrtem Vorzeichen müssen vor der Auswahl passend umgerechnet werden. kW werden nach W, kVA nach VA, mA nach A und ein Leistungsfaktor in Prozent nach 0 bis 1 umgerechnet.
+
+Fehlende oder ungültige optionale Werte werden mit einem Protokollhinweis ausgelassen, ohne die Spannungsübertragung zu verhindern. Das gilt auch für widersprüchliche Statistikwerte (`min <= avg <= max`); bei 0 VA wird der Leistungsfaktor weggelassen. Genau `-1` bleibt bei phasenbezogenen Spannungsstatistiken und Stromstärken der Marker für nicht gemessene Werte. Nicht verfügbare optionale Werte werden nicht durch `0` ersetzt; SOC und Netzleistung dürfen aber tatsächlich 0 sein.
 
 Bei einer Basis-URL ergänzt die Integration automatisch `/v1/measurements`. Eine bereits vollständige Endpunkt-URL bleibt unverändert.
 
@@ -118,7 +148,7 @@ Auch die Phasenattribute `L1`, `L2` und `L3` liefern jetzt `normal`, `warning` o
 
 ## Datenschutz
 
-Die Integration übermittelt Koordinaten, Zeitstempel, die drei Spannungswerte, Netzfrequenz sowie Angaben zu PV-Anlage und Forecast. Optional wird Hersteller und Typ des Smartmeters übertragen; diese Angabe ist ausschließlich im geschützten Adminbereich sichtbar. Die öffentliche Karte zeigt Koordinaten nur gerastert mit etwa 100 Metern Genauigkeit. Die Integration sendet die eingetragenen Koordinaten jedoch ungerundet an den Server; die Rasterung betrifft nur die öffentliche Karte. Verwende bei Bedarf die überschreibbaren Koordinaten, um einen alternativen Standort zu senden.
+Die Integration übermittelt Koordinaten, Zeitstempel, die drei Spannungswerte, Netzfrequenz sowie Angaben zu PV-Anlage und Forecast. Nur bei entsprechender Konfiguration kommen SOC, Batteriekapazität, Netzleistung und die weiteren Messfelder hinzu. Optional wird Hersteller und Typ des Smartmeters übertragen; diese Angabe ist ausschließlich im geschützten Adminbereich sichtbar. Die öffentliche Karte zeigt Koordinaten nur gerastert mit etwa 100 Metern Genauigkeit. Die Integration sendet die eingetragenen Koordinaten jedoch ungerundet an den Server; die Rasterung betrifft nur die öffentliche Karte. Verwende bei Bedarf die überschreibbaren Koordinaten, um einen alternativen Standort zu senden.
 
 ## Kontakt
 

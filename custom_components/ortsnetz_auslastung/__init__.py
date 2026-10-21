@@ -11,10 +11,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.unit_conversion import EnergyConverter
+from homeassistant.util.unit_conversion import ApparentPowerConverter, ElectricCurrentConverter, EnergyConverter, PowerConverter
 from homeassistant.loader import async_get_integration
 
 from .const import CONF_API_URL, CONF_GRID_FREQUENCY_ENTITY, CONF_L1_ENTITY, CONF_L2_ENTITY, CONF_L3_ENTITY, CONF_LATITUDE, CONF_LONGITUDE, CONF_PLANT_CAPACITY_KWP, CONF_PV_FORECAST_ENTITY, CONF_SMARTMETER_MODEL, DOMAIN, MAX_PHASE_VOLTAGE_V, MIN_PHASE_VOLTAGE_V, PLATFORMS, status_signal, storage_recommendation_signal
+from .const import CONF_BATTERY_CAPACITY, OPTIONAL_MEASUREMENT_UNITS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,10 +35,60 @@ def _value(hass: HomeAssistant, entity_id: str, unit: str | None = None) -> floa
     # Sensors without a unit are trusted as before.
     if unit is None or state_unit in (None, unit):
         return value
-    if unit == "kWh" and state_unit in EnergyConverter.VALID_UNITS:
-        return EnergyConverter.convert(value, state_unit, unit)
+    if unit == "1" and state_unit in ("", "1"):
+        return value
+    if unit == "1" and state_unit == "%":
+        return value / 100
+    converter = {"kWh": EnergyConverter, "W": PowerConverter, "VA": ApparentPowerConverter, "A": ElectricCurrentConverter}.get(unit)
+    if converter is not None and state_unit in converter.VALID_UNITS:
+        converted = converter.convert(value, state_unit, unit)
+        return converted if math.isfinite(converted) else None
     _LOGGER.warning("Sensor %s liefert %s, erwartet wird %s", entity_id, state_unit, unit)
     return None
+
+
+def _add_optional_measurements(hass: HomeAssistant, data: dict, payload: dict) -> None:
+    """Read selected existing sensors, omitting invalid optional values only."""
+    capacity = data.get(CONF_BATTERY_CAPACITY)
+    if capacity is not None:
+        if isinstance(capacity, (int, float)) and math.isfinite(capacity) and capacity > 0:
+            payload[CONF_BATTERY_CAPACITY] = capacity
+        else:
+            _LOGGER.warning("Batteriekapazität ist ungültig und wird nicht gesendet")
+    for field, unit in OPTIONAL_MEASUREMENT_UNITS.items():
+        if not (entity_id := data.get(f"{field}_entity")):
+            continue
+        value = _value(hass, entity_id, unit)
+        if value is None:
+            valid = False
+        elif field == "battery_soc_percent":
+            valid = 0 <= value <= 100
+        elif field == "grid_power_w":
+            valid = True
+        elif field == "power_factor":
+            valid = 0 <= value <= 1
+        elif field == "apparent_power_va":
+            valid = value >= 0
+        elif field.endswith("_a"):
+            valid = value == -1 or value >= 0
+        elif field.startswith("grid_frequency_hz_"):
+            valid = 45 <= value <= 55
+        else:
+            valid = value == -1 or 0 < value <= 500
+        if valid:
+            payload[field] = value
+        else:
+            _LOGGER.warning("Optionaler Messwert %s fehlt, hat eine falsche Einheit oder ist ungültig und wird nicht gesendet", field)
+    for prefix in ("l1_v", "l2_v", "l3_v", "grid_frequency_hz"):
+        fields = [f"{prefix}_{suffix}" for suffix in ("min", "avg", "max")]
+        values = [payload[field] for field in fields if field in payload and payload[field] != -1]
+        if values != sorted(values):
+            for field in fields:
+                payload.pop(field, None)
+            _LOGGER.warning("Statistik %s erfüllt min <= avg <= max nicht und wird nicht gesendet", prefix)
+    if payload.get("apparent_power_va") == 0 and "power_factor" in payload:
+        payload.pop("power_factor")
+        _LOGGER.warning("Leistungsfaktor wird bei Scheinleistung 0 VA nicht gesendet")
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -114,6 +165,7 @@ async def _send(hass: HomeAssistant, entry: ConfigEntry) -> None:
             _LOGGER.warning("Netzfrequenz %g Hz liegt außerhalb von 45 bis 55 Hz und wird nicht gesendet", frequency_hz)
         else:
             payload["grid_frequency_hz"] = frequency_hz
+    _add_optional_measurements(hass, data, payload)
     url = data[CONF_API_URL].rstrip("/")
     if not url.endswith("/v1/measurements"):
         url = f"{url}/v1/measurements"

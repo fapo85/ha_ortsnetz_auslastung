@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from urllib.parse import urlsplit
 
 import voluptuous as vol
@@ -8,9 +9,15 @@ from homeassistant.data_entry_flow import section
 from homeassistant.helpers import selector
 
 from .const import CONF_API_URL, CONF_GRID_FREQUENCY_ENTITY, CONF_L1_ENTITY, CONF_L2_ENTITY, CONF_L3_ENTITY, CONF_LATITUDE, CONF_LONGITUDE, CONF_PLANT_CAPACITY_KWP, CONF_PV_FORECAST_ENTITY, CONF_SMARTMETER_MODEL, DOMAIN
+from .const import ADDITIONAL_MEASUREMENT_UNITS, CONF_BATTERY_CAPACITY, OPTIONAL_MEASUREMENT_UNITS
 
 PHASE_VOLTAGES_SECTION = "phase_voltages"
-OPTIONAL_FIELDS = (CONF_GRID_FREQUENCY_ENTITY, CONF_PLANT_CAPACITY_KWP, CONF_PV_FORECAST_ENTITY, CONF_SMARTMETER_MODEL)
+ADDITIONAL_MEASUREMENTS_SECTION = "additional_measurements"
+OPTIONAL_FIELDS = (
+    CONF_GRID_FREQUENCY_ENTITY, CONF_PLANT_CAPACITY_KWP, CONF_PV_FORECAST_ENTITY,
+    CONF_SMARTMETER_MODEL, CONF_BATTERY_CAPACITY,
+    *(f"{field}_entity" for field in OPTIONAL_MEASUREMENT_UNITS),
+)
 
 
 def _required_field(key: str, validator, values: dict, fallback=None):
@@ -42,6 +49,9 @@ def _validate_settings(data: dict) -> dict:
     data[CONF_API_URL] = data[CONF_API_URL].strip()
     if not _valid_api_url(data[CONF_API_URL]):
         return {CONF_API_URL: "invalid_api_url"}
+    capacity = data.get(CONF_BATTERY_CAPACITY)
+    if capacity is not None and (not math.isfinite(capacity) or capacity <= 0):
+        return {CONF_BATTERY_CAPACITY: "invalid_battery_capacity"}
     return {}
 
 
@@ -53,15 +63,25 @@ def _settings_schema(hass, values: dict) -> vol.Schema:
         _required_field(CONF_L2_ENTITY, entity_selector, values),
         _required_field(CONF_L3_ENTITY, entity_selector, values),
     ])
+    additional_fields = dict(
+        _optional_field(f"{field}_entity", entity_selector, values)
+        for field in ADDITIONAL_MEASUREMENT_UNITS
+    )
     fields = dict([
         _required_field(CONF_API_URL, str, values, "https://www.ortsnetz-auslastung.de/v1/measurements"),
         (vol.Required(PHASE_VOLTAGES_SECTION), section(vol.Schema(phase_fields), {"collapsed": False})),
         _optional_field(CONF_GRID_FREQUENCY_ENTITY, entity_selector, values),
+        _optional_field("battery_soc_percent_entity", entity_selector, values),
+        _optional_field(CONF_BATTERY_CAPACITY, selector.NumberSelector(selector.NumberSelectorConfig(
+            min=0, step="any", unit_of_measurement="kWh", mode=selector.NumberSelectorMode.BOX,
+        )), values),
+        _optional_field("grid_power_w_entity", entity_selector, values),
         _optional_field(CONF_PLANT_CAPACITY_KWP, vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1000)), values),
         _optional_field(CONF_PV_FORECAST_ENTITY, entity_selector, values),
         _optional_field(CONF_SMARTMETER_MODEL, vol.All(str, vol.Length(max=120)), values),
         (vol.Optional(CONF_LATITUDE, default=values.get(CONF_LATITUDE, hass.config.latitude)), vol.All(vol.Coerce(float), vol.Range(min=-90, max=90))),
         (vol.Optional(CONF_LONGITUDE, default=values.get(CONF_LONGITUDE, hass.config.longitude)), vol.All(vol.Coerce(float), vol.Range(min=-180, max=180))),
+        (vol.Optional(ADDITIONAL_MEASUREMENTS_SECTION), section(vol.Schema(additional_fields), {"collapsed": True})),
     ])
     return vol.Schema(fields)
 
@@ -71,6 +91,7 @@ def _flatten_sections(user_input: dict) -> dict:
     # Store cleared optional fields as None so they override values from the initial setup.
     data = dict.fromkeys(OPTIONAL_FIELDS) | user_input
     data.update(data.pop(PHASE_VOLTAGES_SECTION, {}))
+    data.update(data.pop(ADDITIONAL_MEASUREMENTS_SECTION, {}))
     return data
 
 
