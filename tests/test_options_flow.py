@@ -71,7 +71,11 @@ async def test_cleared_optional_fields_are_no_longer_sent(hass, aioclient_mock):
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert {key: entry.options[key] for key in OPTIONAL} == dict.fromkeys(OPTIONAL)
 
-    assert not PAYLOAD_KEYS & set(await _payload(hass, aioclient_mock, entry))
+    payload = await _payload(hass, aioclient_mock, entry)
+    assert payload["plant_capacity_kwp"] is None
+    assert payload["smartmeter_model"] is None
+    assert "grid_frequency_hz" not in payload
+    assert "pv_forecast_kwh" not in payload
 
 
 async def test_cleared_fields_are_not_suggested_again(hass):
@@ -96,7 +100,7 @@ async def test_cleared_capacity_also_omits_kept_forecast(hass, aioclient_mock):
     assert entry.options["plant_capacity_kwp"] is None
     assert entry.options["pv_forecast_entity"] == "sensor.forecast"
     assert payload["l1_v"] == 230
-    assert "plant_capacity_kwp" not in payload
+    assert payload["plant_capacity_kwp"] is None
     assert "pv_forecast_kwh" not in payload
 
 

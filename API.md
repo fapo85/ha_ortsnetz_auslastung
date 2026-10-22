@@ -156,7 +156,11 @@ bei einem Batteriespeicher nicht automatisch den Hausverbrauch.
 
 Diese Angaben werden bei Einrichtung, Änderung und Client-Neustart zusammen mit
 einer regulären Messung gesendet; eine zyklische Übertragung ist nicht nötig.
-Auslassung oder `null` erhält den gespeicherten Wert und löscht ihn nicht.
+Werden `plant_capacity_kwp`, `smartmeter_model` oder `battery_capacity` weggelassen,
+bleibt der gespeicherte Wert erhalten. Ein ausdrücklich übertragenes JSON-`null`
+löscht den gespeicherten Wert (SQL-`NULL`). Ein gültiger Wert setzt oder ersetzt
+ihn. Dafür ist eine Serverversion erforderlich, die das ausdrückliche Löschen
+dieser Standortangaben unterstützt.
 Nach einem Standortwechsel durch geänderte Koordinaten müssen sie erneut gesendet werden.
 
 | Feld | Typ / Bereich | Bedeutung |
@@ -168,6 +172,21 @@ Nach einem Standortwechsel durch geänderte Koordinaten müssen sie erneut gesen
 Das Messgerätemodell hilft bei der Einordnung, garantiert aber keine bestimmte Genauigkeit.
 `pv_forecast_kwh` darf maximal 10 kWh je gespeicherter/mitgesendeter kWp pro Tag betragen;
 ohne bekannte Anlagengröße oder bei Überschreitung folgt HTTP 422.
+
+Wird `plant_capacity_kwp` gelöscht und im selben Request ein `pv_forecast_kwh`
+ungleich `null` gesendet, antwortet die API mit HTTP 422. Gespeicherte
+Standortangaben und Messwerte bleiben dabei unverändert. Nach dem Löschen der
+Anlagengröße muss diese vor oder zusammen mit einem neuen Forecast erneut
+angegeben werden. Historische Messwerte und Forecasts werden nicht gelöscht.
+
+Beispiel: Gespeicherte Batteriekapazität löschen und andere Standortangaben
+beibehalten (dieses Feld in einem ansonsten vollständigen Mess-Request senden):
+
+```json
+{
+  "battery_capacity": null
+}
+```
 
 ### Speicherung
 

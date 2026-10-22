@@ -50,7 +50,9 @@ def _value(hass: HomeAssistant, entity_id: str, unit: str | None = None) -> floa
 def _add_optional_measurements(hass: HomeAssistant, data: dict, payload: dict) -> None:
     """Read selected existing sensors, omitting invalid optional values only."""
     capacity = data.get(CONF_BATTERY_CAPACITY)
-    if capacity is not None:
+    if CONF_BATTERY_CAPACITY in data and capacity is None:
+        payload[CONF_BATTERY_CAPACITY] = None
+    elif capacity is not None:
         if isinstance(capacity, (int, float)) and math.isfinite(capacity) and capacity > 0:
             payload[CONF_BATTERY_CAPACITY] = capacity
         else:
@@ -138,11 +140,11 @@ async def _send(hass: HomeAssistant, entry: ConfigEntry) -> None:
         "integration_version": str((await async_get_integration(hass, DOMAIN)).version),
     }
     capacity_kwp = data.get(CONF_PLANT_CAPACITY_KWP)
-    if capacity_kwp is not None:
+    if CONF_PLANT_CAPACITY_KWP in data:
         payload[CONF_PLANT_CAPACITY_KWP] = capacity_kwp
     smartmeter_model = (data.get(CONF_SMARTMETER_MODEL) or "").strip()
-    if smartmeter_model:
-        payload[CONF_SMARTMETER_MODEL] = smartmeter_model
+    if CONF_SMARTMETER_MODEL in data:
+        payload[CONF_SMARTMETER_MODEL] = smartmeter_model or None
     forecast_entity = data.get(CONF_PV_FORECAST_ENTITY)
     if forecast_entity:
         forecast_kwh = _value(hass, forecast_entity, "kWh")

@@ -205,7 +205,28 @@ async def test_options_restore_and_clear_new_fields(hass, aioclient_mock):
         "api_url": URL, "phase_voltages": PHASES,
     })
     payload = await _payload(hass, aioclient_mock, entry)
-    assert not (STANDARD.keys() | ADVANCED.keys() | {"battery_capacity"}) & payload.keys()
+    assert not (STANDARD.keys() | ADVANCED.keys()) & payload.keys()
+    assert "battery_capacity" in payload and payload["battery_capacity"] is None
+
+
+@pytest.mark.parametrize("field,initial", [
+    ("battery_capacity", 12.5), ("plant_capacity_kwp", 9.8), ("smartmeter_model", "Meter A"),
+])
+async def test_cleared_static_field_is_transmitted_as_json_null(hass, aioclient_mock, field, initial):
+    entry = _entry(hass, STANDARD | ADVANCED)
+    saved = {**entry.data, "battery_capacity": 12.5, "plant_capacity_kwp": 9.8, "smartmeter_model": "Meter A"}
+    hass.config_entries.async_update_entry(entry, data=saved)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    form = {"api_url": URL, "phase_voltages": PHASES,
+            **{key: saved[key] for key in ("battery_capacity", "plant_capacity_kwp", "smartmeter_model") if key != field}}
+    await hass.config_entries.options.async_configure(result["flow_id"], form)
+    assert entry.options[field] is None
+    assert entry.data[field] == initial
+    payload = await _payload(hass, aioclient_mock, entry)
+    assert field in payload and json.loads(json.dumps(payload))[field] is None
+    for other in ("battery_capacity", "plant_capacity_kwp", "smartmeter_model"):
+        if other != field:
+            assert payload[other] == saved[other]
 
 
 async def test_options_keep_selected_additional_field(hass, aioclient_mock):

@@ -112,6 +112,15 @@ Die Integration sendet sofort einen ersten Datensatz und danach alle fünf Minut
 
 PV-Forecast und Anlagengröße können leer bleiben. Ohne konfigurierte Anlagengröße lässt die Integration einen ausgewählten Forecast weg und schreibt einen Hinweis ins Protokoll; die Spannungswerte werden weiterhin übertragen. Dasselbe gilt für Forecasts über dem API-Limit von 10 kWh je kWp pro Tag. Bei gültigen Angaben wird der spezifische Forecast-Ertrag als `Forecast (kWh) ÷ Anlagengröße (kWp) = kWh/kWp/Tag` berechnet. Die Integration verlässt sich nicht auf eine möglicherweise bereits serverseitig gespeicherte Anlagengröße, sondern sendet die konfigurierte Größe zusammen mit dem Forecast.
 
+Wenn du unter **Konfigurieren** die Batteriekapazität, die PV-Anlagengröße oder
+das Smartmeter-Modell leerst und speicherst, sendet die Integration mit der
+nächsten gültigen Messung ausdrücklich JSON-`null`. Der gespeicherte Serverwert
+wird dadurch gelöscht. Dafür ist der aktualisierte Server erforderlich; ältere
+Server behalten den bisherigen Wert. Wird ein Feld im API-Request weggelassen,
+bleibt sein gespeicherter Wert erhalten. Nach dem Leeren der PV-Anlagengröße
+werden auch keine Forecasts mehr gesendet. Historische Messwerte und Forecasts
+bleiben gespeichert.
+
 ## Prüfung und Fehlerbehebung
 
 Bei HTTP `403` (Standortsperre) und `422` (abgelehnte Messung) erfolgt kein unmittelbarer Wiederholungsversuch. Beide Statussensoren werden sofort als nicht verfügbar markiert. Der nächste reguläre Sendeversuch erfolgt nach fünf Minuten. Bei anderen Übertragungsfehlern bleibt der zweite Versuch nach fünf Sekunden bestehen.
