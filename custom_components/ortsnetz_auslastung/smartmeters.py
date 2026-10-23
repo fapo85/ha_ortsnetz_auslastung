@@ -123,6 +123,7 @@ PV_SMARTMETER_MODELS = (
     "SMA Energy Meter",
     "SMA Sunny Home Manager 2.0",
     "SolarEdge Energy Meter",
+    "Solaredge SE-MTR-3Y-400V-A",
 )
 
 SMARTMETER_MODELS = tuple(sorted(
