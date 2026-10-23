@@ -103,15 +103,12 @@ def _add_optional_measurements(hass: HomeAssistant, data: dict, payload: dict) -
         _LOGGER.warning("Leistungsfaktor wird bei Scheinleistung 0 VA nicht gesendet")
 
 
-from .logic import _build_payload, _validate_voltages
-
-
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Update existing entries to the current integration name."""
     if entry.version < 3:
         data = dict(entry.data)
         data.pop("token", None)
-        hass.config_entries.async_update_entry(hass, title="Ortsnetz-Auslastung", data=data, version=3)
+        hass.config_entries.async_update_entry(entry, title="Ortsnetz-Auslastung", data=data, version=3)
     return True
 
 
