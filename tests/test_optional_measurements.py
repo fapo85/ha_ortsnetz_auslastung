@@ -139,6 +139,12 @@ async def test_unconfigured_measurements_are_omitted(hass, aioclient_mock):
     ("power_factor", 0.98, "", 0.98),
     ("battery_soc_percent", 100, "%", 100),
     ("l1_v_min", -1, "V", -1),
+    ("l1_v_min", 228000, "mV", 228),
+    ("l2_v_avg", 0.2305, "kV", 230.5),
+    ("l3_v_max", 235000, "mV", 235),
+    ("grid_frequency_hz_min", 49950, "mHz", 49.95),
+    ("grid_frequency_hz_avg", 0.05001, "kHz", 50.01),
+    ("grid_frequency_hz_max", 50060, "mHz", 50.06),
 ])
 async def test_units_and_valid_boundary_values(hass, aioclient_mock, field, value, unit, expected):
     payload = await _payload(hass, aioclient_mock, _entry(hass, {field: (value, unit)}))
@@ -154,6 +160,8 @@ async def test_units_and_valid_boundary_values(hass, aioclient_mock, field, valu
     ("apparent_power_va", -1, "VA"), ("l1_a", -2, "A"),
     ("l1_v_min", 0, "V"), ("l1_v_max", 501, "V"),
     ("grid_frequency_hz_avg", 60, "Hz"), ("grid_frequency_hz_min", -1, "Hz"),
+    ("grid_frequency_hz_avg", 60000, "mHz"), ("l1_v_max", 501000, "mV"),
+    ("grid_frequency_hz_max", 1e308, "kHz"), ("l1_v_min", 1e308, "kV"),
 ])
 async def test_invalid_optional_value_does_not_block_voltages(hass, aioclient_mock, field, value, unit):
     payload = await _payload(hass, aioclient_mock, _entry(hass, {field: (value, unit)}))

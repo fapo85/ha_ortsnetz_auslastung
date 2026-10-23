@@ -11,7 +11,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.unit_conversion import ApparentPowerConverter, ElectricCurrentConverter, EnergyConverter, PowerConverter
+from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
+    EnergyConverter,
+    FrequencyConverter,
+    PowerConverter,
+)
 from homeassistant.loader import async_get_integration
 
 from .const import CONF_API_URL, CONF_GRID_FREQUENCY_ENTITY, CONF_L1_ENTITY, CONF_L2_ENTITY, CONF_L3_ENTITY, CONF_LATITUDE, CONF_LONGITUDE, CONF_PLANT_CAPACITY_KWP, CONF_PV_FORECAST_ENTITY, CONF_SMARTMETER_MODEL, DOMAIN, MAX_PHASE_VOLTAGE_V, MIN_PHASE_VOLTAGE_V, PLATFORMS, status_signal, storage_recommendation_signal
@@ -39,7 +46,10 @@ def _value(hass: HomeAssistant, entity_id: str, unit: str | None = None) -> floa
         return value
     if unit == "1" and state_unit == "%":
         return value / 100
-    converter = {"kWh": EnergyConverter, "W": PowerConverter, "VA": ApparentPowerConverter, "A": ElectricCurrentConverter}.get(unit)
+    converter = {
+        "kWh": EnergyConverter, "W": PowerConverter, "VA": ApparentPowerConverter,
+        "A": ElectricCurrentConverter, "V": ElectricPotentialConverter, "Hz": FrequencyConverter,
+    }.get(unit)
     if converter is not None and state_unit in converter.VALID_UNITS:
         converted = converter.convert(value, state_unit, unit)
         return converted if math.isfinite(converted) else None

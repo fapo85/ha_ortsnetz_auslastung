@@ -41,8 +41,25 @@ async def test_non_finite_voltage_is_not_sent(hass, aioclient_mock, voltages):
     assert await _payload(hass, aioclient_mock, voltages=voltages) is None
 
 
-async def test_voltage_in_other_unit_is_not_sent(hass, aioclient_mock):
-    assert await _payload(hass, aioclient_mock, voltages=("0.23", "0.231", "0.229"), voltage_unit="kV") is None
+@pytest.mark.parametrize(("voltages", "unit"), [
+    (("230000", "231000", "229000"), "mV"),
+    (("0.23", "0.231", "0.229"), "kV"),
+    (("230000000", "231000000", "229000000"), "μV"),
+])
+async def test_voltage_in_convertible_unit_is_sent_in_volts(hass, aioclient_mock, voltages, unit):
+    payload = await _payload(hass, aioclient_mock, voltages=voltages, voltage_unit=unit)
+    assert tuple(payload[key] for key in ("l1_v", "l2_v", "l3_v")) == pytest.approx((230, 231, 229))
+
+
+@pytest.mark.parametrize(("voltages", "unit"), [
+    (("50000", "231000", "229000"), "mV"),
+    (("301000", "231000", "229000"), "mV"),
+    (("1e308", "0.231", "0.229"), "kV"),
+    (("230", "231", "229"), "W"),
+    (("230", "231", "229"), "unknown-unit"),
+])
+async def test_voltage_conversion_keeps_plausibility_and_unit_checks(hass, aioclient_mock, voltages, unit):
+    assert await _payload(hass, aioclient_mock, voltages=voltages, voltage_unit=unit) is None
 
 
 async def test_voltage_without_unit_is_still_sent(hass, aioclient_mock):
@@ -129,7 +146,13 @@ async def test_forecast_respects_capacity_limit(hass, aioclient_mock, forecast, 
         (("55", "Hz"), 55),
         (("60.5", "Hz"), None),
         (("0", "Hz"), None),
-        (("50010", "mHz"), None),
+        (("50010", "mHz"), 50.01),
+        (("0.05001", "kHz"), 50.01),
+        (("45000", "mHz"), 45),
+        (("55000", "mHz"), 55),
+        (("60000", "mHz"), None),
+        (("50", "mV"), None),
+        (("1e308", "kHz"), None),
         (("nan", "Hz"), None),
     ],
 )
@@ -139,7 +162,7 @@ async def test_frequency_unit_and_range(hass, aioclient_mock, frequency, expecte
     if expected is None:
         assert "grid_frequency_hz" not in payload
     else:
-        assert payload["grid_frequency_hz"] == expected
+        assert payload["grid_frequency_hz"] == pytest.approx(expected)
 
 
 def _form_input(latitude, longitude):
