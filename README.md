@@ -146,7 +146,7 @@ Auch die Phasenattribute `L1`, `L2` und `L3` liefern jetzt `normal`, `warning` o
 
 ## Datenschutz
 
-Die Integration übermittelt Koordinaten, Zeitstempel, die drei Spannungswerte, Netzfrequenz sowie Angaben zu PV-Anlage und Forecast. Nur bei entsprechender Konfiguration kommen SOC, Batteriekapazität, Netzleistung und die weiteren Messfelder hinzu. Optional wird Hersteller und Typ des Smartmeters übertragen; diese Angabe ist ausschließlich im geschützten Adminbereich sichtbar. Die öffentliche Karte zeigt Koordinaten nur gerastert mit etwa 100 Metern Genauigkeit. Die Integration sendet die eingetragenen Koordinaten jedoch ungerundet an den Server; die Rasterung betrifft nur die öffentliche Karte. Verwende bei Bedarf die überschreibbaren Koordinaten, um einen alternativen Standort zu senden.
+Die Integration übermittelt Koordinaten, Zeitstempel, die drei Spannungswerte, Netzfrequenz sowie Angaben zu PV-Anlage und Forecast. Nur bei entsprechender Konfiguration kommen SOC, Batteriekapazität, Netzleistung und die weiteren Messfelder hinzu. Optional wird Hersteller und Typ des Smartmeters übertragen. Die öffentliche Karte zeigt Koordinaten nur gerastert mit etwa 100 Metern Genauigkeit. Die Integration sendet die eingetragenen Koordinaten jedoch ungerundet an den Server; die Rasterung betrifft nur die öffentliche Karte. Verwende bei Bedarf die überschreibbaren Koordinaten, um einen alternativen Standort zu senden.
 
 ## Kontakt
 
