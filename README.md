@@ -11,12 +11,12 @@ Für eine Karte der öffentlichen Messpunkte steht zusätzlich das Community-Pro
 ## Voraussetzungen
 
 - Home Assistant mit installiertem [HACS](https://hacs.xyz/)
-- Drei numerische `sensor`-Entitäten für L1, L2 und L3; die Zustände müssen Voltwerte enthalten, z. B. `229.8`
+- Drei numerische `sensor`-Entitäten für L1, L2 und L3; Spannungswerte mit kompatibler Einheit, z. B. `229.8 V` oder `229800 mV`
 
 Beim Einrichten legt die Integration zusätzlich die Entitäten **Netzspannungsstatus** und **Batteriespeicherempfehlung** an; ihre Werte erscheinen nach der ersten erfolgreichen Übertragung. Der Netzspannungsstatus ist der jeweils schlechteste Phasenstatus (`Normal`, `Warnung` oder `Kritisch`); die Attribute `L1`, `L2` und `L3` zeigen die Einzelbewertungen. Die Batteriespeicherempfehlung ist bei Überspannung `Laden`, bei Unterspannung `Entladen` und bei normaler Spannung `Keine Aktion`. Bei gleichzeitiger Über- und Unterspannung hat `Entladen` Vorrang. Beide Werte kommen in der Antwort der bestehenden Messübertragung zurück und erzeugen keinen zusätzlichen API-Aufruf. Schlägt eine Übertragung auch im zweiten Versuch fehl oder wird sie wegen eines fehlenden oder unplausiblen Spannungswerts übersprungen, sind beide Entitäten nicht verfügbar, bis die API wieder einen gültigen Wert liefert.
 
 - Optional: Eine numerische Forecast-Sensor-Entität mit dem erwarteten PV-Tagesertrag in kWh
-- Eine numerische Sensor-Entität für die Netzfrequenz in Hz, z. B. `50.01`
+- Eine numerische Sensor-Entität für die Netzfrequenz mit kompatibler Einheit, z. B. `50.01 Hz` oder `50010 mHz`
 - Vom Server-Admin bereitgestellte öffentliche API-Adresse per HTTPS
 
 Die Integration ist nicht für Werte wie `unknown`, `unavailable` oder Text geeignet. In diesem Fall wird die betreffende Übertragung übersprungen und in den Home-Assistant-Protokollen vermerkt.
@@ -71,7 +71,7 @@ Warte, bis Home Assistant wieder vollständig erreichbar ist.
    | Anlagengröße (kWp) | Optional, für die Forecast-Übertragung erforderlich. Tatsächlich installierte Nennleistung der PV-Anlage in Kilowatt-Peak, z. B. `9.8` mit Punkt als Trenner. |
    | PV-Forecast heute (kWh) | Optionaler Forecast-Sensor für den erwarteten PV-Ertrag des aktuellen Tages; wird nur mit konfigurierter Anlagengröße übertragen |
    | Smartmeter Hersteller / Typ | Optionales, durchsuchbares Dropdown mit freier Eingabe (maximal 120 Zeichen). Vorhandene eigene Einträge bleiben erhalten. Die Angabe wird nur im Adminbereich der Ortsnetz-Auslastung angezeigt. |
-   | Netzfrequenz (Hz) | Frequenz-Sensor des Smartmeters, dessen Wert in Hertz geliefert wird |
+   | Netzfrequenz (Hz) | Frequenz-Sensor des Smartmeters; Hz, mHz und kHz werden automatisch in Hz umgerechnet |
    | Batterie-Ladezustand / SOC (%) | Optionaler Sensor für den aktuellen Ladezustand, 0 bis 100 % |
    | Nutzbare Batteriekapazität (kWh) | Optional. Tatsächliche nutzbare Kapazität eintragen, nicht den aktuellen Energieinhalt. Kein Wert ist vorbelegt. |
    | Netzleistung gesamt (W) | Optionaler Sensor für die gesamte Wirkleistung am Hausanschluss: positiv = Netzbezug, negativ = Einspeisung |
@@ -88,10 +88,12 @@ SOC, Batteriekapazität und Netzleistung sind für alle Nutzer direkt sichtbar u
 | Leistungsfaktor gesamt | Vorhandener Sensor mit einem Wert von 0 bis 1 oder in Prozent |
 | Scheinleistung gesamt | Vorhandener Sensor in VA oder kVA |
 | Stromstärke L1, L2, L3 | Je ein vorhandener Sensor in A oder mA |
-| Spannung L1, L2, L3: Minimum, Maximum, Mittelwert | Je ein vorhandener 5-Minuten-Statistiksensor in V |
-| Netzfrequenz: Minimum, Maximum, Mittelwert | Je ein vorhandener 5-Minuten-Statistiksensor in Hz |
+| Spannung L1, L2, L3: Minimum, Maximum, Mittelwert | Je ein vorhandener 5-Minuten-Statistiksensor mit kompatibler Spannungseinheit, z. B. V oder mV |
+| Netzfrequenz: Minimum, Maximum, Mittelwert | Je ein vorhandener 5-Minuten-Statistiksensor in Hz, mHz oder kHz |
 
 Alle Felder können leer bleiben. Die Integration liest nur die zugeordneten Sensorzustände und fragt keine zusätzlichen Geräte ab. Sie berechnet keine eigenen Min/Max/Mittelwerte; die ausgewählten Statistiksensoren müssen diese über dasselbe fünfminütige Messintervall liefern. Netzleistung darf nicht durch Wechselrichterleistung oder die Leistung nur einer Phase ersetzt werden. Sensoren mit umgekehrtem Vorzeichen müssen vor der Auswahl passend umgerechnet werden. kW werden nach W, kVA nach VA, mA nach A und ein Leistungsfaktor in Prozent nach 0 bis 1 umgerechnet.
+
+Spannung und Netzfrequenz werden anhand des Sensorattributs `unit_of_measurement` automatisch in V beziehungsweise Hz umgerechnet: beispielsweise `230000 mV → 230 V` und `50010 mHz → 50.01 Hz`. Auch kV und µV sowie kHz werden unterstützt. Das gilt ebenso für die optionalen Minimum-, Maximum- und Mittelwerte. Die Plausibilitätsprüfung erfolgt nach der Umrechnung. Numerische Sensorwerte ohne Einheit werden weiterhin als V beziehungsweise Hz behandelt; der Wert `-1` bleibt bei Spannungen der Marker für eine nicht gemessene Phase.
 
 Fehlende oder ungültige optionale Werte werden mit einem Protokollhinweis ausgelassen, ohne die Spannungsübertragung zu verhindern. Das gilt auch für widersprüchliche Statistikwerte (`min <= avg <= max`); bei 0 VA wird der Leistungsfaktor weggelassen. Genau `-1` bleibt bei phasenbezogenen Spannungsstatistiken und Stromstärken der Marker für nicht gemessene Werte. Nicht verfügbare optionale Werte werden nicht durch `0` ersetzt; SOC und Netzleistung dürfen aber tatsächlich 0 sein.
 
@@ -147,6 +149,10 @@ Auch die Phasenattribute `L1`, `L2` und `L3` liefern jetzt `normal`, `warning` o
 ## Datenschutz
 
 Die Integration übermittelt Koordinaten, Zeitstempel, die drei Spannungswerte, Netzfrequenz sowie Angaben zu PV-Anlage und Forecast. Nur bei entsprechender Konfiguration kommen SOC, Batteriekapazität, Netzleistung und die weiteren Messfelder hinzu. Optional wird Hersteller und Typ des Smartmeters übertragen. Die öffentliche Karte zeigt Koordinaten nur gerastert mit etwa 100 Metern Genauigkeit. Die Integration sendet die eingetragenen Koordinaten jedoch ungerundet an den Server; die Rasterung betrifft nur die öffentliche Karte. Verwende bei Bedarf die überschreibbaren Koordinaten, um einen alternativen Standort zu senden.
+
+## Projekt unterstützen
+
+Du möchtest das Projekt unterstützen? [Sponsor werden über Ko-fi](https://ko-fi.com/thomaslehmann1234).
 
 ## Kontakt
 
