@@ -103,12 +103,15 @@ def _add_optional_measurements(hass: HomeAssistant, data: dict, payload: dict) -
         _LOGGER.warning("Leistungsfaktor wird bei Scheinleistung 0 VA nicht gesendet")
 
 
+from .logic import _build_payload, _validate_voltages
+
+
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Update existing entries to the current integration name."""
     if entry.version < 3:
         data = dict(entry.data)
         data.pop("token", None)
-        hass.config_entries.async_update_entry(entry, title="Ortsnetz-Auslastung", data=data, version=3)
+        hass.config_entries.async_update_entry(hass, title="Ortsnetz-Auslastung", data=data, version=3)
     return True
 
 
@@ -155,6 +158,9 @@ async def _send(hass: HomeAssistant, entry: ConfigEntry) -> None:
     smartmeter_model = (data.get(CONF_SMARTMETER_MODEL) or "").strip()
     if CONF_SMARTMETER_MODEL in data:
         payload[CONF_SMARTMETER_MODEL] = smartmeter_model or None
+
+    # Forecast and Frequency
+    forecast_kwh = None
     forecast_entity = data.get(CONF_PV_FORECAST_ENTITY)
     if forecast_entity:
         forecast_kwh = _value(hass, forecast_entity, "kWh")
@@ -168,6 +174,8 @@ async def _send(hass: HomeAssistant, entry: ConfigEntry) -> None:
             _LOGGER.warning("PV-Forecast %g kWh überschreitet 10 kWh/kWp pro Tag bei %g kWp und wird nicht gesendet", forecast_kwh, capacity_kwp)
         else:
             payload["pv_forecast_kwh"] = forecast_kwh
+
+    frequency_hz = None
     frequency_entity = data.get(CONF_GRID_FREQUENCY_ENTITY)
     if frequency_entity:
         frequency_hz = _value(hass, frequency_entity, "Hz")
@@ -185,6 +193,7 @@ async def _send(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not url.lower().startswith("https://"):
         _LOGGER.error("Ortsnetz-Auslastung sendet keine Messung: Die API-Adresse muss mit https:// beginnen; bitte unter Konfigurieren korrigieren")
         return
+
     session = async_get_clientsession(hass)
     for attempt in range(2):
         try:
@@ -217,13 +226,11 @@ async def _send(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 if response.status in (403, 422):
                     if response.status == 403:
                         _LOGGER.error(
-                            "Ortsnetz-API hat den Standort gesperrt (HTTP 403); "
-                            "Standortangaben prüfen oder den Server-Admin kontaktieren"
+                            "Ortsnetz-API hat den Standort gesperrt (HTTP 403); Standortangaben prüfen oder den Server-Admin kontaktieren"
                         )
                     else:
                         _LOGGER.error(
-                            "Ortsnetz-API hat die Messung abgelehnt (HTTP 422); "
-                            "Sensorwerte und Konfiguration prüfen"
+                            "Ortsnetz-API hat die Messung abgelehnt (HTTP 422); Sensorwerte und Konfiguration prüfen"
                         )
                     _publish(hass, entry)
                     return
