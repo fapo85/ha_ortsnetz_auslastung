@@ -1,19 +1,4 @@
-# Ortsnetz-Auslastung Beta für Home-Assistant-Admins
-
-> **Beta 0.6.0b1:** Entwicklungsstand zum Testen der neuen optionalen Messfelder. Die stabile Integration bleibt unter [ha_ortsnetz_auslastung](https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung) verfügbar.
-
-Für den regulären Einsatz empfehlen wir die [stabile Integration](https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung#readme). Suche im HACS-Standardkatalog nach **Ortsnetz-Auslastung**; ein benutzerdefiniertes Repository ist dafür nicht erforderlich. Dieses Beta-Repository ist ein optionaler Testkanal und nicht der empfohlene Installationsweg.
-
-## Hinweise zum Beta-Test
-
-- Vor der Installation die Home-Assistant-Konfiguration und die bisherigen Integrationsdateien sichern. Eine separate HA-Testinstanz ist empfohlen.
-- Beta und Stable verwenden denselben Ordner und dieselbe Domain `ortsnetz_auslastung`. Sie können nicht parallel in derselben HA-Instanz installiert sein. Die bestehende Integration nicht löschen; ihre Konfiguration und Entitäts-IDs sollen erhalten bleiben.
-- HACS darf nicht beide Repositories gleichzeitig als Installationsquelle derselben Integration verwalten. Beim Wechsel die Installationsquelle gezielt auf Beta umstellen; nicht beide Versionen übereinander aktualisieren lassen.
-- Ohne GitHub-Releases verwendet HACS den Standardbranch `main`. Für den Test ist kein Release erforderlich; nach Aktualisierungen der Beta-Dateien Home Assistant neu starten.
-- Die Integration sendet sofort nach dem Start und danach alle fünf Minuten an die konfigurierte API. Nur reale Messwerte senden und pro Messquelle nur einen aktiven Sender betreiben. Keine Testwerte an die produktive API schicken.
-- Zum Rückwechsel die stabile Installationsquelle und die gesicherten Dateien wiederherstellen und Home Assistant neu starten. Die bestehende Integration und ihre Entitäten nicht löschen.
-
-Domain, Sensor-IDs und gespeicherte Einstellungen bleiben unverändert. Der Beta-Name kennzeichnet nur den installierten Entwicklungsstand.
+# Ortsnetz-Auslastung für Home-Assistant-Admins
 
 Diese Anleitung richtet sich an Personen, die eine Home-Assistant-Instanz betreuen. Die HACS-Integration sendet die drei Phasenspannungen L1, L2 und L3 sowie den Standort deiner Instanz an die Ortsnetz-Auslastung-API. Nach dem ersten Senden werden die Werte alle fünf Minuten übertragen.
 
@@ -42,26 +27,23 @@ Die Sensorwerte `230`, `-1`, `-1` ergeben beispielsweise eine einphasige Messung
 
 > **Wichtig:** Wähle für L1, L2 und L3 immer die Spannungs-Sensoren des Smartmeters deiner PV-Anlage aus. Wähle auch die Netzfrequenz bevorzugt vom selben Smartmeter. Andere Spannungs- oder Frequenzwerte, etwa von Steckdosen, Wechselrichtern oder einzelnen Geräten, bilden die Netzqualität am Anschluss nicht zuverlässig ab und dürfen nicht verwendet werden.
 
-## 1. Optionale Beta über HACS herunterladen
+## 1. Stabile Integration über HACS herunterladen
 
-[![Beta-Repository in HACS öffnen.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomaslehmann1234&repository=ha_ortsnetz_auslastung_beta&category=integration)
+Die stabile Integration ist für den regulären Einsatz empfohlen und im HACS-Standardkatalog verfügbar. Ein benutzerdefiniertes Repository ist nicht erforderlich.
 
-Fahre nur fort, wenn du Beta-Änderungen testen möchtest. Für die Beta ist ein benutzerdefiniertes Repository erforderlich. Nutze den Button oben oder füge es manuell hinzu:
+[![Stabile Integration in HACS öffnen.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomaslehmann1234&repository=ha_ortsnetz_auslastung&category=integration)
+
+Mit dem Button öffnest du die stabile Integration direkt in HACS. Alternativ manuell:
 
 1. Öffne **HACS** in Home Assistant.
-2. Öffne das Drei-Punkte-Menü und wähle **Benutzerdefinierte Repositories**.
-3. Trage diese Repository-URL ein:
+2. Suche nach **Ortsnetz-Auslastung**.
+3. Öffne die Integration und wähle **Herunterladen**.
 
-   ```text
-   https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung_beta
-   ```
+Starte anschließend Home Assistant neu und richte die Integration wie unten beschrieben unter **Einstellungen → Geräte & Dienste** ein.
 
-4. Wähle als Kategorie **Integration** und bestätige mit **Hinzufügen**.
-5. Suche nach **Ortsnetz-Auslastung Beta** und wähle **Herunterladen**.
+Bestehende Installationen müssen wegen der Aufnahme in den HACS-Standardkatalog weder entfernt noch neu eingerichtet werden. Konfiguration und Entitäten bleiben erhalten.
 
-Starte anschließend Home Assistant wie unten beschrieben neu.
-
-Stable und Beta verwenden dieselbe Integrationsdomain. Installiere nicht beide gleichzeitig und lösche beim Wechsel weder die bestehende Konfiguration noch die Entitäten. Beachte die Hinweise zum Beta-Test oben.
+Das separate [Beta-Repository](https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung_beta) dient ausschließlich zum Testen kommender Änderungen. Stable und Beta können nicht gleichzeitig in derselben Home-Assistant-Instanz installiert sein.
 
 ## 2. Home Assistant neu starten
 
@@ -77,7 +59,7 @@ Warte, bis Home Assistant wieder vollständig erreichbar ist.
 
 1. Öffne **Einstellungen → Geräte & Dienste**.
 2. Klicke auf **Integration hinzufügen**.
-3. Suche nach **Ortsnetz-Auslastung Beta**.
+3. Suche nach **Ortsnetz-Auslastung**.
 4. Fülle die Felder aus:
 
    | Feld | Wert |
