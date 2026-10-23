@@ -21,9 +21,9 @@ Beim Einrichten legt die Integration zusätzlich die Entitäten **Netzspannungss
 
 Die Integration ist nicht für Werte wie `unknown`, `unavailable` oder Text geeignet. In diesem Fall wird die betreffende Übertragung übersprungen und in den Home-Assistant-Protokollen vermerkt.
 
-Gemessene Phasenspannungen müssen zwischen 150 und 300 V liegen. Liefert ein ausgewählter Sensor genau `-1`, wird diese Phase von der Auswertung ausgeschlossen. Mindestens eine Phase muss eine gültige Spannung liefern; andere ungültige oder nicht verfügbare Werte verhindern weiterhin die Übertragung. Ausgeschlossene Phasen erscheinen als `unavailable` in den Statusattributen `L1`, `L2` und `L3`. Gesamtstatus und Batteriespeicherempfehlung bleiben für die gemessenen Phasen verfügbar.
+Gemessene Phasenspannungen müssen zwischen 150 und 300 V liegen. Liefert ein ausgewählter Sensor genau `-1`, wird diese Phase von der Bewertung ausgeschlossen. Mindestens eine Phase muss einen gültigen Spannungswert liefern; andere ungültige oder nicht verfügbare Werte verhindern weiterhin die Übertragung. Ausgeschlossene Phasen erscheinen in den Statusattributen `L1`, `L2` und `L3` als `unavailable`. Gesamtstatus und Batterieempfehlung bleiben für die gemessenen Phasen verfügbar.
 
-Die Sensorwerte `230`, `-1`, `-1` ergeben beispielsweise eine einphasige Messung. Alle drei Sensorfelder benötigen weiterhin eine Sensor-Entität; `-1` ist der Sensorzustand und keine Entitäts-ID für den Konfigurationsdialog.
+Beispielsweise übertragen die Sensorwerte `230`, `-1`, `-1` eine einphasige Messung. Alle drei Sensorfelder benötigen weiterhin eine Sensor-Entität. `-1` ist dabei der Sensorzustand und keine Entitäts-ID für den Konfigurationsdialog.
 
 > **Wichtig:** Wähle für L1, L2 und L3 immer die Spannungs-Sensoren des Smartmeters deiner PV-Anlage aus. Wähle auch die Netzfrequenz bevorzugt vom selben Smartmeter. Andere Spannungs- oder Frequenzwerte, etwa von Steckdosen, Wechselrichtern oder einzelnen Geräten, bilden die Netzqualität am Anschluss nicht zuverlässig ab und dürfen nicht verwendet werden.
 
