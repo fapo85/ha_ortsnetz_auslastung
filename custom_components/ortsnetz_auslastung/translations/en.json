@@ -37,6 +37,7 @@
           "longitude": "Longitude"
         },
         "data_description": {
+          "smartmeter_model": "Select a model or enter your own name (maximum 120 characters). Optional; the list does not guarantee compatibility.",
           "battery_capacity": "Enter the actual usable capacity, not the current energy content.",
           "grid_power_w_entity": "At the grid connection: positive = import, negative = export. Do not select inverter output power."
         },
@@ -77,6 +78,7 @@
       }
     },
     "error": {
+      "invalid_smartmeter_model": "Use at most 120 characters for the manufacturer and model.",
       "invalid_api_url": "Enter a valid HTTPS URL.",
       "invalid_battery_capacity": "Enter a valid battery capacity greater than 0 kWh."
     }
@@ -99,6 +101,7 @@
           "longitude": "Longitude"
         },
         "data_description": {
+          "smartmeter_model": "Select a model or enter your own name (maximum 120 characters). Optional; the list does not guarantee compatibility.",
           "battery_capacity": "Enter the actual usable capacity, not the current energy content.",
           "grid_power_w_entity": "At the grid connection: positive = import, negative = export. Do not select inverter output power."
         },
@@ -139,6 +142,7 @@
       }
     },
     "error": {
+      "invalid_smartmeter_model": "Use at most 120 characters for the manufacturer and model.",
       "invalid_api_url": "Enter a valid HTTPS URL.",
       "invalid_battery_capacity": "Enter a valid battery capacity greater than 0 kWh."
     }

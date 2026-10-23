@@ -2,6 +2,8 @@
 
 > **Beta 0.6.0b1:** Entwicklungsstand zum Testen der neuen optionalen Messfelder. Die stabile Integration bleibt unter [ha_ortsnetz_auslastung](https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung) verfügbar.
 
+Für den regulären Einsatz empfehlen wir die [stabile Integration](https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung#readme). Suche im HACS-Standardkatalog nach **Ortsnetz-Auslastung**; ein benutzerdefiniertes Repository ist dafür nicht erforderlich. Dieses Beta-Repository ist ein optionaler Testkanal und nicht der empfohlene Installationsweg.
+
 ## Hinweise zum Beta-Test
 
 - Vor der Installation die Home-Assistant-Konfiguration und die bisherigen Integrationsdateien sichern. Eine separate HA-Testinstanz ist empfohlen.
@@ -40,23 +42,26 @@ Die Sensorwerte `230`, `-1`, `-1` ergeben beispielsweise eine einphasige Messung
 
 > **Wichtig:** Wähle für L1, L2 und L3 immer die Spannungs-Sensoren des Smartmeters deiner PV-Anlage aus. Wähle auch die Netzfrequenz bevorzugt vom selben Smartmeter. Andere Spannungs- oder Frequenzwerte, etwa von Steckdosen, Wechselrichtern oder einzelnen Geräten, bilden die Netzqualität am Anschluss nicht zuverlässig ab und dürfen nicht verwendet werden.
 
-## 1. Integration über HACS herunterladen
+## 1. Optionale Beta über HACS herunterladen
 
-[![Dieses Beta-Repository in HACS öffnen.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomaslehmann1234&repository=ha_ortsnetz_auslastung_beta&category=integration)
+[![Beta-Repository in HACS öffnen.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomaslehmann1234&repository=ha_ortsnetz_auslastung_beta&category=integration)
 
-Mit dem Button wird dieses Repository direkt in HACS geöffnet. Alternativ manuell:
+Fahre nur fort, wenn du Beta-Änderungen testen möchtest. Für die Beta ist ein benutzerdefiniertes Repository erforderlich. Nutze den Button oben oder füge es manuell hinzu:
 
-1. Öffne Home Assistant.
-2. Wähle **HACS**, rechts aus der Menuleiste.
-3. Öffne oben rechts das Menü mit den drei Punkten und wähle **Benutzerdefinierte Repositories**.
-4. Trage als Repository-URL ein:
+1. Öffne **HACS** in Home Assistant.
+2. Öffne das Drei-Punkte-Menü und wähle **Benutzerdefinierte Repositories**.
+3. Trage diese Repository-URL ein:
 
    ```text
    https://github.com/thomaslehmann1234/ha_ortsnetz_auslastung_beta
    ```
 
-5. Wähle als Kategorie **Integration** und bestätige mit **Hinzufügen**.
-6. Suche nach **Ortsnetz-Auslastung Beta** und wähle **Herunterladen**.
+4. Wähle als Kategorie **Integration** und bestätige mit **Hinzufügen**.
+5. Suche nach **Ortsnetz-Auslastung Beta** und wähle **Herunterladen**.
+
+Starte anschließend Home Assistant wie unten beschrieben neu.
+
+Stable und Beta verwenden dieselbe Integrationsdomain. Installiere nicht beide gleichzeitig und lösche beim Wechsel weder die bestehende Konfiguration noch die Entitäten. Beachte die Hinweise zum Beta-Test oben.
 
 ## 2. Home Assistant neu starten
 
@@ -83,7 +88,7 @@ Warte, bis Home Assistant wieder vollständig erreichbar ist.
    | Sensor L3 | Sensor-Entität für Phase L3 |
    | Anlagengröße (kWp) | Optional, für die Forecast-Übertragung erforderlich. Tatsächlich installierte Nennleistung der PV-Anlage in Kilowatt-Peak, z. B. `9.8` mit Punkt als Trenner. |
    | PV-Forecast heute (kWh) | Optionaler Forecast-Sensor für den erwarteten PV-Ertrag des aktuellen Tages; wird nur mit konfigurierter Anlagengröße übertragen |
-   | Smartmeter Hersteller / Typ | Optionaler Freitext, z. B. Hersteller und Modell des Smartmeters. Er wird nur im Adminbereich der Ortsnetz-Auslastung angezeigt. |
+   | Smartmeter Hersteller / Typ | Optionales, durchsuchbares Dropdown mit freier Eingabe (maximal 120 Zeichen). Vorhandene eigene Einträge bleiben erhalten. Die Angabe wird nur im Adminbereich der Ortsnetz-Auslastung angezeigt. |
    | Netzfrequenz (Hz) | Frequenz-Sensor des Smartmeters, dessen Wert in Hertz geliefert wird |
    | Batterie-Ladezustand / SOC (%) | Optionaler Sensor für den aktuellen Ladezustand, 0 bis 100 % |
    | Nutzbare Batteriekapazität (kWh) | Optional. Tatsächliche nutzbare Kapazität eintragen, nicht den aktuellen Energieinhalt. Kein Wert ist vorbelegt. |
@@ -91,6 +96,8 @@ Warte, bis Home Assistant wieder vollständig erreichbar ist.
    | Breitengrad / Längengrad | Standardmäßig der Home-Assistant-Standort; bei Bedarf überschreiben |
 
 5. Bestätige die Einrichtung.
+
+Die Smartmeter-Auswahl wird lokal mit der Integration ausgeliefert und benötigt keine Online-Abfrage. Grundlage ist die bereinigte Stromzähler-Liste der [Tasmota Smart Meter Descriptors](https://tasmota.github.io/docs/Smart-Meter-Interface/#smart-meter-descriptors), ergänzt um gängige PV-Smartmeter. Die Liste ist keine Kompatibilitätsgarantie: Entscheidend sind weiterhin die verfügbaren Spannungs-Sensoren am Hausanschluss. Nicht gelistete Modelle können direkt im selben Feld eingegeben werden; das Feld darf auch leer bleiben.
 
 SOC, Batteriekapazität und Netzleistung sind für alle Nutzer direkt sichtbar und ausdrücklich optional. Die übrigen neuen Angaben stehen im standardmäßig eingeklappten Bereich **Weitere Messfelder (optional)**. Dieser lässt sich bei der Einrichtung und später unter **Konfigurieren** aufklappen:
 

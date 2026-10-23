@@ -37,6 +37,7 @@
           "longitude": "Längengrad"
         },
         "data_description": {
+          "smartmeter_model": "Modell auswählen oder eigenen Namen eingeben (maximal 120 Zeichen). Optional; die Liste ist keine Kompatibilitätsgarantie.",
           "battery_capacity": "Die tatsächliche nutzbare Kapazität eintragen, nicht den aktuellen Energieinhalt.",
           "grid_power_w_entity": "Am Hausanschluss: positiv = Netzbezug, negativ = Einspeisung. Nicht die Wechselrichterleistung auswählen."
         },
@@ -77,6 +78,7 @@
       }
     },
     "error": {
+      "invalid_smartmeter_model": "Verwende höchstens 120 Zeichen für Hersteller und Modell.",
       "invalid_api_url": "Gib eine gültige HTTPS-Adresse ein.",
       "invalid_battery_capacity": "Trage eine gültige Batteriekapazität größer als 0 kWh ein."
     }
@@ -99,6 +101,7 @@
           "longitude": "Längengrad"
         },
         "data_description": {
+          "smartmeter_model": "Modell auswählen oder eigenen Namen eingeben (maximal 120 Zeichen). Optional; die Liste ist keine Kompatibilitätsgarantie.",
           "battery_capacity": "Die tatsächliche nutzbare Kapazität eintragen, nicht den aktuellen Energieinhalt.",
           "grid_power_w_entity": "Am Hausanschluss: positiv = Netzbezug, negativ = Einspeisung. Nicht die Wechselrichterleistung auswählen."
         },
@@ -139,6 +142,7 @@
       }
     },
     "error": {
+      "invalid_smartmeter_model": "Verwende höchstens 120 Zeichen für Hersteller und Modell.",
       "invalid_api_url": "Gib eine gültige HTTPS-Adresse ein.",
       "invalid_battery_capacity": "Trage eine gültige Batteriekapazität größer als 0 kWh ein."
     }

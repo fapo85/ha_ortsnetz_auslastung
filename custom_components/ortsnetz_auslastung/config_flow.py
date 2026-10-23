@@ -10,6 +10,7 @@ from homeassistant.helpers import selector
 
 from .const import CONF_API_URL, CONF_GRID_FREQUENCY_ENTITY, CONF_L1_ENTITY, CONF_L2_ENTITY, CONF_L3_ENTITY, CONF_LATITUDE, CONF_LONGITUDE, CONF_PLANT_CAPACITY_KWP, CONF_PV_FORECAST_ENTITY, CONF_SMARTMETER_MODEL, DOMAIN
 from .const import ADDITIONAL_MEASUREMENT_UNITS, CONF_BATTERY_CAPACITY, OPTIONAL_MEASUREMENT_UNITS
+from .smartmeters import SMARTMETER_MODELS
 
 PHASE_VOLTAGES_SECTION = "phase_voltages"
 ADDITIONAL_MEASUREMENTS_SECTION = "additional_measurements"
@@ -52,6 +53,9 @@ def _validate_settings(data: dict) -> dict:
     capacity = data.get(CONF_BATTERY_CAPACITY)
     if capacity is not None and (not math.isfinite(capacity) or capacity <= 0):
         return {CONF_BATTERY_CAPACITY: "invalid_battery_capacity"}
+    model = data.get(CONF_SMARTMETER_MODEL)
+    if model is not None and (not isinstance(model, str) or len(model) > 120):
+        return {CONF_SMARTMETER_MODEL: "invalid_smartmeter_model"}
     return {}
 
 
@@ -78,7 +82,14 @@ def _settings_schema(hass, values: dict) -> vol.Schema:
         _optional_field("grid_power_w_entity", entity_selector, values),
         _optional_field(CONF_PLANT_CAPACITY_KWP, vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1000)), values),
         _optional_field(CONF_PV_FORECAST_ENTITY, entity_selector, values),
-        _optional_field(CONF_SMARTMETER_MODEL, vol.All(str, vol.Length(max=120)), values),
+        _optional_field(CONF_SMARTMETER_MODEL, selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(SMARTMETER_MODELS),
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                custom_value=True,
+                sort=True,
+            )
+        ), values),
         (vol.Optional(CONF_LATITUDE, default=values.get(CONF_LATITUDE, hass.config.latitude)), vol.All(vol.Coerce(float), vol.Range(min=-90, max=90))),
         (vol.Optional(CONF_LONGITUDE, default=values.get(CONF_LONGITUDE, hass.config.longitude)), vol.All(vol.Coerce(float), vol.Range(min=-180, max=180))),
         (vol.Optional(ADDITIONAL_MEASUREMENTS_SECTION), section(vol.Schema(additional_fields), {"collapsed": True})),
