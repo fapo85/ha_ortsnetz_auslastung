@@ -16,6 +16,7 @@ from .smartmeters import SMARTMETER_MODELS
 PHASE_VOLTAGES_SECTION = "phase_voltages"
 ADDITIONAL_MEASUREMENTS_SECTION = "additional_measurements"
 PHASE_FIELDS = (CONF_L1_ENTITY, CONF_L2_ENTITY, CONF_L3_ENTITY)
+PHASE_NOT_MEASURED = "not_measured"
 OPTIONAL_FIELDS = (
     CONF_GRID_FREQUENCY_ENTITY, CONF_PLANT_CAPACITY_KWP, CONF_PV_FORECAST_ENTITY,
     CONF_SMARTMETER_MODEL, CONF_BATTERY_CAPACITY,
@@ -54,6 +55,8 @@ def _validate_settings(data: dict) -> dict:
         return {CONF_API_URL: "invalid_api_url"}
     for key in PHASE_FIELDS:
         value = data[key].strip() or "-1"
+        if value == PHASE_NOT_MEASURED:
+            value = "-1"
         data[key] = value
         if value == "-1":
             continue
@@ -87,11 +90,13 @@ def _settings_schema(hass, values: dict) -> vol.Schema:
         phase_labels.append({"value": entity_id, "label": label})
     phase_labels.sort(key=lambda option: option["label"].casefold())
     phase_selector = selector.SelectSelector(selector.SelectSelectorConfig(
-        options=[{"value": "-1", "label": "Phase not measured (-1)"}, *phase_labels],
+        options=[{"value": PHASE_NOT_MEASURED, "label": "Phase not measured (-1)"}, *phase_labels],
         translation_key="phase_sensor", custom_value=True,
         mode=selector.SelectSelectorMode.DROPDOWN,
     ))
-    phase_fields = dict(_optional_field(key, phase_selector, values) for key in PHASE_FIELDS)
+    # Translate the UI choice without changing the persisted/API exclusion marker.
+    phase_values = {key: PHASE_NOT_MEASURED if values.get(key) == "-1" else values.get(key) for key in PHASE_FIELDS}
+    phase_fields = dict(_optional_field(key, phase_selector, phase_values) for key in PHASE_FIELDS)
     additional_fields = dict(
         _optional_field(f"{field}_entity", entity_selector, values)
         for field in ADDITIONAL_MEASUREMENT_UNITS

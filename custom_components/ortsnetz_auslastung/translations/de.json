@@ -2,7 +2,7 @@
   "selector": {
     "phase_sensor": {
       "options": {
-        "-1": "Phase nicht gemessen (-1)"
+        "not_measured": "Phase nicht gemessen (-1)"
       }
     }
   },

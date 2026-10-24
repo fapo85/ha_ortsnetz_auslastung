@@ -1,6 +1,8 @@
 """Phase selection supports sensors, explicit -1 and clearing existing choices."""
 
 import json
+from pathlib import Path
+import re
 from unittest.mock import patch
 
 import pytest
@@ -47,11 +49,12 @@ async def test_phase_dropdown_accepts_custom_values_and_preserves_saved_sensors(
         assert config["custom_value"] is True
         assert config["translation_key"] == "phase_sensor"
         options = {option["value"]: option["label"] for option in config["options"]}
-        assert options["-1"] == "Phase not measured (-1)"
+        assert options["not_measured"] == "Phase not measured (-1)"
+        assert "-1" not in options
         assert options["sensor.l1"] == "Smartmeter Spannung L1 (sensor.l1)"
         assert options["sensor.l3"] == "sensor.l3"
         assert "light.test" not in options
-        assert config["options"][0]["value"] == "-1"
+        assert config["options"][0]["value"] == "not_measured"
         labels = [option["label"] for option in config["options"][1:]]
         assert labels == sorted(labels, key=str.casefold)
 
@@ -59,11 +62,20 @@ async def test_phase_dropdown_accepts_custom_values_and_preserves_saved_sensors(
 @pytest.mark.parametrize("language,label", [("de", "Phase nicht gemessen (-1)"), ("en", "Phase not measured (-1)")])
 async def test_excluded_phase_option_is_translated(hass, language, label):
     translations = await async_get_translations(hass, language, "selector", {DOMAIN})
-    assert translations[f"component.{DOMAIN}.selector.phase_sensor.options.-1"] == label
+    assert translations[f"component.{DOMAIN}.selector.phase_sensor.options.not_measured"] == label
+
+
+@pytest.mark.parametrize("language", ["de", "en"])
+def test_selector_translation_option_keys_follow_hassfest_rules(language):
+    path = Path(__file__).parents[1] / "custom_components" / DOMAIN / "translations" / f"{language}.json"
+    translations = json.loads(path.read_text())
+    for selector in translations["selector"].values():
+        for option in selector["options"]:
+            assert re.fullmatch(r"[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?", option)
 
 
 @pytest.mark.parametrize("phase", (1, 2, 3))
-@pytest.mark.parametrize("excluded", ("-1", "", None))
+@pytest.mark.parametrize("excluded", ("not_measured", "-1", "", None))
 async def test_setup_supports_any_single_phase(hass, phase, excluded):
     selection = {f"l{phase}_entity": f"sensor.l{phase}"}
     if excluded is not None:
@@ -79,7 +91,7 @@ async def test_setup_supports_any_single_phase(hass, phase, excluded):
 
 
 @pytest.mark.parametrize("phase", (1, 2, 3))
-@pytest.mark.parametrize("excluded", ("-1", "", None))
+@pytest.mark.parametrize("excluded", ("not_measured", "-1", "", None))
 async def test_existing_phases_can_be_cleared_or_set_to_minus_one(hass, aioclient_mock, phase, excluded):
     entry = _entry(hass)
     selection = {f"l{phase}_entity": f"sensor.l{phase}"}
@@ -100,10 +112,11 @@ async def test_existing_phases_can_be_cleared_or_set_to_minus_one(hass, aioclien
     fields = reopened["data_schema"].schema["phase_voltages"].schema.schema
     for name in PHASES:
         key = next(key for key in fields if key == name)
-        assert key.description["suggested_value"] == entry.options[name]
+        expected = "not_measured" if entry.options[name] == "-1" else entry.options[name]
+        assert key.description["suggested_value"] == expected
 
 
-@pytest.mark.parametrize("selection", [{}, dict.fromkeys(PHASES, "-1"), dict.fromkeys(PHASES, " ")])
+@pytest.mark.parametrize("selection", [{}, dict.fromkeys(PHASES, "not_measured"), dict.fromkeys(PHASES, "-1"), dict.fromkeys(PHASES, " ")])
 async def test_setup_and_options_reject_all_excluded_phases(hass, selection):
     form = {"api_url": URL, "phase_voltages": selection}
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
