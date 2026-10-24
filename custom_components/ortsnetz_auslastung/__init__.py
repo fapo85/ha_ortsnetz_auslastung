@@ -121,7 +121,10 @@ def _publish(hass: HomeAssistant, entry: ConfigEntry, status: dict | None = None
 async def _send(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Options override the initial setup data.
     data = {**entry.data, **entry.options}
-    values = [_value(hass, data[key], "V") for key in (CONF_L1_ENTITY, CONF_L2_ENTITY, CONF_L3_ENTITY)]
+    values = [
+        -1.0 if data.get(key) in (None, "", "-1", -1) else _value(hass, data[key], "V")
+        for key in (CONF_L1_ENTITY, CONF_L2_ENTITY, CONF_L3_ENTITY)
+    ]
     if any(value is None for value in values):
         _LOGGER.warning("Spannungssensor für Ortsnetz-Auslastung ist nicht verfügbar")
         _publish(hass, entry)

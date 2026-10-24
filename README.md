@@ -11,7 +11,7 @@ Für eine Karte der öffentlichen Messpunkte steht zusätzlich das Community-Pro
 ## Voraussetzungen
 
 - Home Assistant mit installiertem [HACS](https://hacs.xyz/)
-- Drei numerische `sensor`-Entitäten für L1, L2 und L3; Spannungswerte mit kompatibler Einheit, z. B. `229.8 V` oder `229800 mV`
+- Mindestens eine numerische `sensor`-Entität für eine gemessene Phase; Spannungswerte mit kompatibler Einheit, z. B. `229.8 V` oder `229800 mV`. Nicht gemessene Phasen bleiben leer oder erhalten direkt `-1`.
 
 Beim Einrichten legt die Integration zusätzlich die Entitäten **Netzspannungsstatus** und **Batteriespeicherempfehlung** an; ihre Werte erscheinen nach der ersten erfolgreichen Übertragung. Der Netzspannungsstatus ist der jeweils schlechteste Phasenstatus (`Normal`, `Warnung` oder `Kritisch`); die Attribute `L1`, `L2` und `L3` zeigen die Einzelbewertungen. Die Batteriespeicherempfehlung ist bei Überspannung `Laden`, bei Unterspannung `Entladen` und bei normaler Spannung `Keine Aktion`. Bei gleichzeitiger Über- und Unterspannung hat `Entladen` Vorrang. Beide Werte kommen in der Antwort der bestehenden Messübertragung zurück und erzeugen keinen zusätzlichen API-Aufruf. Schlägt eine Übertragung auch im zweiten Versuch fehl oder wird sie wegen eines fehlenden oder unplausiblen Spannungswerts übersprungen, sind beide Entitäten nicht verfügbar, bis die API wieder einen gültigen Wert liefert.
 
@@ -23,7 +23,7 @@ Die Integration ist nicht für Werte wie `unknown`, `unavailable` oder Text geei
 
 Gemessene Phasenspannungen müssen zwischen 150 und 300 V liegen. Liefert ein ausgewählter Sensor genau `-1`, wird diese Phase von der Bewertung ausgeschlossen. Mindestens eine Phase muss einen gültigen Spannungswert liefern; andere ungültige oder nicht verfügbare Werte verhindern weiterhin die Übertragung. Ausgeschlossene Phasen erscheinen in den Statusattributen `L1`, `L2` und `L3` als `unavailable`. Gesamtstatus und Batterieempfehlung bleiben für die gemessenen Phasen verfügbar.
 
-Beispielsweise übertragen die Sensorwerte `230`, `-1`, `-1` eine einphasige Messung. Alle drei Sensorfelder benötigen weiterhin eine Sensor-Entität. `-1` ist dabei der Sensorzustand und keine Entitäts-ID für den Konfigurationsdialog.
+Für jede Phase kannst du einen Spannungs-Sensor auswählen oder direkt `-1` eintragen. Ein geleertes Feld schließt die Phase ebenfalls aus; die Integration überträgt dafür `-1`. Mindestens eine Phase muss einem Sensor zugeordnet bleiben. Beispielsweise erfasst `sensor.spannung_l1` zusammen mit `-1` für L2 und L3 eine einphasige Messung. Bereits ausgewählte Sensoren lassen sich unter **Konfigurieren** wieder entfernen. Fällt ein weiterhin ausgewählter Sensor aus oder liefert einen ungültigen Wert, wird die gesamte Messung übersprungen und ein Fehler protokolliert; die Phase wird nicht automatisch ausgeschlossen.
 
 > **Wichtig:** Wähle für L1, L2 und L3 immer die Spannungs-Sensoren des Smartmeters deiner PV-Anlage aus. Wähle auch die Netzfrequenz bevorzugt vom selben Smartmeter. Andere Spannungs- oder Frequenzwerte, etwa von Steckdosen, Wechselrichtern oder einzelnen Geräten, bilden die Netzqualität am Anschluss nicht zuverlässig ab und dürfen nicht verwendet werden.
 
@@ -65,9 +65,9 @@ Warte, bis Home Assistant wieder vollständig erreichbar ist.
    | Feld | Wert |
    | --- | --- |
    | API-Adresse | `https://www.ortsnetz-auslastung.de` oder `https://www.ortsnetz-auslastung.de/v1/measurements` |
-   | Sensor L1 | Sensor-Entität für Phase L1 |
-   | Sensor L2 | Sensor-Entität für Phase L2 |
-   | Sensor L3 | Sensor-Entität für Phase L3 |
+   | Sensor L1 | Sensor-Entität für Phase L1; alternativ `-1` oder leer zum Ausschließen |
+   | Sensor L2 | Sensor-Entität für Phase L2; alternativ `-1` oder leer zum Ausschließen |
+   | Sensor L3 | Sensor-Entität für Phase L3; alternativ `-1` oder leer zum Ausschließen |
    | Anlagengröße (kWp) | Optional, für die Forecast-Übertragung erforderlich. Tatsächlich installierte Nennleistung der PV-Anlage in Kilowatt-Peak, z. B. `9.8` mit Punkt als Trenner. |
    | PV-Forecast heute (kWh) | Optionaler Forecast-Sensor für den erwarteten PV-Ertrag des aktuellen Tages; wird nur mit konfigurierter Anlagengröße übertragen |
    | Smartmeter Hersteller / Typ | Optionales, durchsuchbares Dropdown mit freier Eingabe (maximal 120 Zeichen). Vorhandene eigene Einträge bleiben erhalten. Die Angabe wird nur im Adminbereich der Ortsnetz-Auslastung angezeigt. |

@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import selector
+from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_API_URL, CONF_GRID_FREQUENCY_ENTITY, CONF_L1_ENTITY, CONF_L2_ENTITY, CONF_L3_ENTITY, CONF_LATITUDE, CONF_LONGITUDE, CONF_PLANT_CAPACITY_KWP, CONF_PV_FORECAST_ENTITY, CONF_SMARTMETER_MODEL, DOMAIN
 from .const import ADDITIONAL_MEASUREMENT_UNITS, CONF_BATTERY_CAPACITY, OPTIONAL_MEASUREMENT_UNITS
@@ -14,6 +15,7 @@ from .smartmeters import SMARTMETER_MODELS
 
 PHASE_VOLTAGES_SECTION = "phase_voltages"
 ADDITIONAL_MEASUREMENTS_SECTION = "additional_measurements"
+PHASE_FIELDS = (CONF_L1_ENTITY, CONF_L2_ENTITY, CONF_L3_ENTITY)
 OPTIONAL_FIELDS = (
     CONF_GRID_FREQUENCY_ENTITY, CONF_PLANT_CAPACITY_KWP, CONF_PV_FORECAST_ENTITY,
     CONF_SMARTMETER_MODEL, CONF_BATTERY_CAPACITY,
@@ -50,6 +52,19 @@ def _validate_settings(data: dict) -> dict:
     data[CONF_API_URL] = data[CONF_API_URL].strip()
     if not _valid_api_url(data[CONF_API_URL]):
         return {CONF_API_URL: "invalid_api_url"}
+    for key in PHASE_FIELDS:
+        value = data[key].strip() or "-1"
+        data[key] = value
+        if value == "-1":
+            continue
+        try:
+            data[key] = cv.entity_id(value)
+        except vol.Invalid:
+            return {"base": "invalid_phase_selection"}
+        if not data[key].startswith("sensor."):
+            return {"base": "invalid_phase_selection"}
+    if all(data[key] == "-1" for key in PHASE_FIELDS):
+        return {"base": "no_measured_phase"}
     capacity = data.get(CONF_BATTERY_CAPACITY)
     if capacity is not None and (not math.isfinite(capacity) or capacity <= 0):
         return {CONF_BATTERY_CAPACITY: "invalid_battery_capacity"}
@@ -62,11 +77,13 @@ def _validate_settings(data: dict) -> dict:
 def _settings_schema(hass, values: dict) -> vol.Schema:
     """Build setup and options fields for the token-free measurement API."""
     entity_selector = selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor"))
-    phase_fields = dict([
-        _required_field(CONF_L1_ENTITY, entity_selector, values),
-        _required_field(CONF_L2_ENTITY, entity_selector, values),
-        _required_field(CONF_L3_ENTITY, entity_selector, values),
-    ])
+    phase_options = set(hass.states.async_entity_ids("sensor"))
+    phase_options.update(values[key] for key in PHASE_FIELDS if isinstance(values.get(key), str) and values[key].startswith("sensor."))
+    phase_selector = selector.SelectSelector(selector.SelectSelectorConfig(
+        options=["-1", *sorted(phase_options)], custom_value=True,
+        mode=selector.SelectSelectorMode.DROPDOWN,
+    ))
+    phase_fields = dict(_optional_field(key, phase_selector, values) for key in PHASE_FIELDS)
     additional_fields = dict(
         _optional_field(f"{field}_entity", entity_selector, values)
         for field in ADDITIONAL_MEASUREMENT_UNITS
@@ -100,7 +117,7 @@ def _settings_schema(hass, values: dict) -> vol.Schema:
 def _flatten_sections(user_input: dict) -> dict:
     """Keep the stored config flat although the form groups phase inputs."""
     # Store cleared optional fields as None so they override values from the initial setup.
-    data = dict.fromkeys(OPTIONAL_FIELDS) | user_input
+    data = dict.fromkeys(PHASE_FIELDS, "-1") | dict.fromkeys(OPTIONAL_FIELDS) | user_input
     data.update(data.pop(PHASE_VOLTAGES_SECTION, {}))
     data.update(data.pop(ADDITIONAL_MEASUREMENTS_SECTION, {}))
     return data

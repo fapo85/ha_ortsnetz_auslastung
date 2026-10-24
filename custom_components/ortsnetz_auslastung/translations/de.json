@@ -23,7 +23,7 @@
     "step": {
       "user": {
         "title": "Ortsnetz-Auslastung",
-        "description": "Wähle die drei Spannungs-Sensoren und die Ziel-API.",
+        "description": "Wähle mindestens einen Spannungs-Sensor und die Ziel-API. Nicht gemessene Phasen können leer bleiben oder -1 erhalten.",
         "data": {
           "api_url": "API-Adresse",
           "grid_frequency_entity": "Netzfrequenz (Hz) – optional",
@@ -44,7 +44,7 @@
         "sections": {
           "phase_voltages": {
             "name": "Phasenspannungen (V)",
-            "description": "Wähle die drei Spannungswerte vom Smartmeter deiner PV-Anlage.",
+            "description": "Sensor auswählen oder -1 eingeben; ein leeres Feld schließt die Phase ebenfalls aus. Mindestens eine Phase muss einem Sensor zugeordnet sein.",
             "data": {
               "l1_entity": "Netzspannung Phase L1 (V)",
               "l2_entity": "Netzspannung Phase L2 (V)",
@@ -78,6 +78,8 @@
       }
     },
     "error": {
+      "invalid_phase_selection": "Wähle einen Sensor oder gib -1 für eine ausgeschlossene Phase ein.",
+      "no_measured_phase": "Mindestens eine Phase muss einem Spannungs-Sensor zugeordnet sein.",
       "invalid_smartmeter_model": "Verwende höchstens 120 Zeichen für Hersteller und Modell.",
       "invalid_api_url": "Gib eine gültige HTTPS-Adresse ein.",
       "invalid_battery_capacity": "Trage eine gültige Batteriekapazität größer als 0 kWh ein."
@@ -108,7 +110,7 @@
         "sections": {
           "phase_voltages": {
             "name": "Phasenspannungen (V)",
-            "description": "Wähle die drei Spannungswerte vom Smartmeter deiner PV-Anlage.",
+            "description": "Sensor auswählen oder -1 eingeben; ein leeres Feld schließt die Phase ebenfalls aus. Mindestens eine Phase muss einem Sensor zugeordnet sein.",
             "data": {
               "l1_entity": "Netzspannung Phase L1 (V)",
               "l2_entity": "Netzspannung Phase L2 (V)",
@@ -142,6 +144,8 @@
       }
     },
     "error": {
+      "invalid_phase_selection": "Wähle einen Sensor oder gib -1 für eine ausgeschlossene Phase ein.",
+      "no_measured_phase": "Mindestens eine Phase muss einem Spannungs-Sensor zugeordnet sein.",
       "invalid_smartmeter_model": "Verwende höchstens 120 Zeichen für Hersteller und Modell.",
       "invalid_api_url": "Gib eine gültige HTTPS-Adresse ein.",
       "invalid_battery_capacity": "Trage eine gültige Batteriekapazität größer als 0 kWh ein."
