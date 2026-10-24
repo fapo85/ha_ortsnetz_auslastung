@@ -167,7 +167,7 @@ Nach einem Standortwechsel durch geänderte Koordinaten müssen sie erneut gesen
 | --- | --- | --- |
 | `plant_capacity_kwp` | Zahl, größer 0 bis 1000 kWp | Installierte PV-Leistung; muss vor oder mit dem ersten Forecast bekannt sein |
 | `smartmeter_model` | String, maximal 120 Zeichen | Hersteller und Modell des Messgeräts, nicht die übertragende Software |
-| `battery_capacity` | Zahl, größer 0 kWh | Nutzbare Batteriespeicherkapazität, kein SOC oder aktueller Energieinhalt |
+| `battery_capacity` | Zahl, 0 bis einschließlich 150 kWh | Nutzbare Batteriespeicherkapazität, kein SOC oder aktueller Energieinhalt. `0` ist ein gültiger Wert; `null` löscht die Angabe. |
 
 Das Messgerätemodell hilft bei der Einordnung, garantiert aber keine bestimmte Genauigkeit.
 `pv_forecast_kwh` darf maximal 10 kWh je gespeicherter/mitgesendeter kWp pro Tag betragen;

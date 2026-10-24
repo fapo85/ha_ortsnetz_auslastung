@@ -1,4 +1,11 @@
 {
+  "selector": {
+    "phase_sensor": {
+      "options": {
+        "-1": "Phase nicht gemessen (-1)"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "voltage_status": {
@@ -38,7 +45,7 @@
         },
         "data_description": {
           "smartmeter_model": "Modell auswählen oder eigenen Namen eingeben (maximal 120 Zeichen). Optional; die Liste ist keine Kompatibilitätsgarantie.",
-          "battery_capacity": "Die tatsächliche nutzbare Kapazität eintragen, nicht den aktuellen Energieinhalt.",
+          "battery_capacity": "Nutzbare Kapazität von 0 bis 150 kWh eintragen, nicht den aktuellen Energieinhalt.",
           "grid_power_w_entity": "Am Hausanschluss: positiv = Netzbezug, negativ = Einspeisung. Nicht die Wechselrichterleistung auswählen."
         },
         "sections": {
@@ -82,7 +89,7 @@
       "no_measured_phase": "Mindestens eine Phase muss einem Spannungs-Sensor zugeordnet sein.",
       "invalid_smartmeter_model": "Verwende höchstens 120 Zeichen für Hersteller und Modell.",
       "invalid_api_url": "Gib eine gültige HTTPS-Adresse ein.",
-      "invalid_battery_capacity": "Trage eine gültige Batteriekapazität größer als 0 kWh ein."
+      "invalid_battery_capacity": "Trage eine gültige Batteriekapazität von 0 bis einschließlich 150 kWh ein."
     }
   },
   "options": {
@@ -104,7 +111,7 @@
         },
         "data_description": {
           "smartmeter_model": "Modell auswählen oder eigenen Namen eingeben (maximal 120 Zeichen). Optional; die Liste ist keine Kompatibilitätsgarantie.",
-          "battery_capacity": "Die tatsächliche nutzbare Kapazität eintragen, nicht den aktuellen Energieinhalt.",
+          "battery_capacity": "Nutzbare Kapazität von 0 bis 150 kWh eintragen, nicht den aktuellen Energieinhalt.",
           "grid_power_w_entity": "Am Hausanschluss: positiv = Netzbezug, negativ = Einspeisung. Nicht die Wechselrichterleistung auswählen."
         },
         "sections": {
@@ -148,7 +155,7 @@
       "no_measured_phase": "Mindestens eine Phase muss einem Spannungs-Sensor zugeordnet sein.",
       "invalid_smartmeter_model": "Verwende höchstens 120 Zeichen für Hersteller und Modell.",
       "invalid_api_url": "Gib eine gültige HTTPS-Adresse ein.",
-      "invalid_battery_capacity": "Trage eine gültige Batteriekapazität größer als 0 kWh ein."
+      "invalid_battery_capacity": "Trage eine gültige Batteriekapazität von 0 bis einschließlich 150 kWh ein."
     }
   }
 }

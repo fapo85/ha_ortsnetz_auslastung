@@ -7,6 +7,7 @@ import pytest
 import voluptuous as vol
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.data_entry_flow import FlowManagerIndexView
+from homeassistant.helpers.translation import async_get_translations
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ortsnetz_auslastung import _send
@@ -28,6 +29,7 @@ def _entry(hass):
 
 async def test_phase_dropdown_accepts_custom_values_and_preserves_saved_sensors(hass):
     entry = _entry(hass)
+    hass.states.async_set("sensor.l1", "230", {"friendly_name": "Smartmeter Spannung L1", "unit_of_measurement": "V"})
     hass.states.async_remove("sensor.l3")
     hass.states.async_set("light.test", "on")
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -43,9 +45,21 @@ async def test_phase_dropdown_accepts_custom_values_and_preserves_saved_sensors(
     for field in section["schema"]:
         config = field["selector"]["select"]
         assert config["custom_value"] is True
-        assert "-1" in config["options"]
-        assert "sensor.l3" in config["options"]
-        assert "light.test" not in config["options"]
+        assert config["translation_key"] == "phase_sensor"
+        options = {option["value"]: option["label"] for option in config["options"]}
+        assert options["-1"] == "Phase not measured (-1)"
+        assert options["sensor.l1"] == "Smartmeter Spannung L1 (sensor.l1)"
+        assert options["sensor.l3"] == "sensor.l3"
+        assert "light.test" not in options
+        assert config["options"][0]["value"] == "-1"
+        labels = [option["label"] for option in config["options"][1:]]
+        assert labels == sorted(labels, key=str.casefold)
+
+
+@pytest.mark.parametrize("language,label", [("de", "Phase nicht gemessen (-1)"), ("en", "Phase not measured (-1)")])
+async def test_excluded_phase_option_is_translated(hass, language, label):
+    translations = await async_get_translations(hass, language, "selector", {DOMAIN})
+    assert translations[f"component.{DOMAIN}.selector.phase_sensor.options.-1"] == label
 
 
 @pytest.mark.parametrize("phase", (1, 2, 3))

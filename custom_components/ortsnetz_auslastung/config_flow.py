@@ -32,7 +32,7 @@ def _required_field(key: str, validator, values: dict, fallback=None):
 
 def _optional_field(key: str, validator, values: dict):
     """Suggest a saved value without a default, so clearing the field removes it."""
-    if values.get(key):
+    if values.get(key) is not None and values[key] != "":
         return vol.Optional(key, description={"suggested_value": values[key]}), validator
     return vol.Optional(key), validator
 
@@ -66,7 +66,7 @@ def _validate_settings(data: dict) -> dict:
     if all(data[key] == "-1" for key in PHASE_FIELDS):
         return {"base": "no_measured_phase"}
     capacity = data.get(CONF_BATTERY_CAPACITY)
-    if capacity is not None and (not math.isfinite(capacity) or capacity <= 0):
+    if capacity is not None and (not math.isfinite(capacity) or not 0 <= capacity <= 150):
         return {CONF_BATTERY_CAPACITY: "invalid_battery_capacity"}
     model = data.get(CONF_SMARTMETER_MODEL)
     if model is not None and (not isinstance(model, str) or len(model) > 120):
@@ -79,8 +79,16 @@ def _settings_schema(hass, values: dict) -> vol.Schema:
     entity_selector = selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor"))
     phase_options = set(hass.states.async_entity_ids("sensor"))
     phase_options.update(values[key] for key in PHASE_FIELDS if isinstance(values.get(key), str) and values[key].startswith("sensor."))
+    phase_labels = []
+    for entity_id in phase_options:
+        state = hass.states.get(entity_id)
+        name = state.name if state else entity_id
+        label = f"{name} ({entity_id})" if name != entity_id else entity_id
+        phase_labels.append({"value": entity_id, "label": label})
+    phase_labels.sort(key=lambda option: option["label"].casefold())
     phase_selector = selector.SelectSelector(selector.SelectSelectorConfig(
-        options=["-1", *sorted(phase_options)], custom_value=True,
+        options=[{"value": "-1", "label": "Phase not measured (-1)"}, *phase_labels],
+        translation_key="phase_sensor", custom_value=True,
         mode=selector.SelectSelectorMode.DROPDOWN,
     ))
     phase_fields = dict(_optional_field(key, phase_selector, values) for key in PHASE_FIELDS)
@@ -94,7 +102,7 @@ def _settings_schema(hass, values: dict) -> vol.Schema:
         _optional_field(CONF_GRID_FREQUENCY_ENTITY, entity_selector, values),
         _optional_field("battery_soc_percent_entity", entity_selector, values),
         _optional_field(CONF_BATTERY_CAPACITY, selector.NumberSelector(selector.NumberSelectorConfig(
-            min=0, step="any", unit_of_measurement="kWh", mode=selector.NumberSelectorMode.BOX,
+            min=0, max=150, step="any", unit_of_measurement="kWh", mode=selector.NumberSelectorMode.BOX,
         )), values),
         _optional_field("grid_power_w_entity", entity_selector, values),
         _optional_field(CONF_PLANT_CAPACITY_KWP, vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1000)), values),

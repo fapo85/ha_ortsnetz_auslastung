@@ -103,17 +103,57 @@ async def test_setup_flattens_additional_fields(hass):
     assert SECTION not in result["data"]
 
 
-@pytest.mark.parametrize("capacity", [0, -1, float("nan"), float("inf")])
-async def test_setup_rejects_invalid_battery_capacity(hass, capacity):
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
-    values = {"api_url": URL, "phase_voltages": PHASES, "battery_capacity": capacity}
-    if capacity < 0:
-        with pytest.raises(InvalidData):
-            await hass.config_entries.flow.async_configure(result["flow_id"], values)
+@pytest.mark.parametrize("options", [False, True])
+@pytest.mark.parametrize("capacity", [-0.01, -1, 150.01, 151, float("nan"), float("inf"), -float("inf")])
+async def test_setup_and_options_reject_invalid_battery_capacity(hass, capacity, options):
+    if options:
+        entry = _entry(hass, capacity=12.5)
+        flow = hass.config_entries.options
+        result = await flow.async_init(entry.entry_id)
     else:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], values)
+        flow = hass.config_entries.flow
+        result = await flow.async_init(DOMAIN, context={"source": "user"})
+    values = {"api_url": URL, "phase_voltages": PHASES, "battery_capacity": capacity}
+    if capacity < 0 or capacity > 150:
+        with pytest.raises(InvalidData):
+            await flow.async_configure(result["flow_id"], values)
+    else:
+        result = await flow.async_configure(result["flow_id"], values)
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"battery_capacity": "invalid_battery_capacity"}
+
+
+@pytest.mark.parametrize("options", [False, True])
+@pytest.mark.parametrize("capacity", [0, 0.01, 12.5, 149.99, 150])
+async def test_setup_and_options_accept_battery_capacity_boundaries(hass, capacity, options):
+    if options:
+        entry = _entry(hass, capacity=12.5)
+        flow = hass.config_entries.options
+        result = await flow.async_init(entry.entry_id)
+    else:
+        flow = hass.config_entries.flow
+        result = await flow.async_init(DOMAIN, context={"source": "user"})
+    with patch("custom_components.ortsnetz_auslastung.async_setup_entry", return_value=True):
+        result = await flow.async_configure(result["flow_id"], {
+            "api_url": URL, "phase_voltages": PHASES, "battery_capacity": capacity,
+        })
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["battery_capacity"] == capacity
+
+
+@pytest.mark.parametrize("capacity", [0, 0.01, 12.5, 149.99, 150])
+async def test_saved_capacity_is_suggested_and_sent_including_zero(hass, aioclient_mock, capacity):
+    entry = _entry(hass, capacity=capacity)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    fields = result["data_schema"].schema
+    key = next(key for key in fields if key == "battery_capacity")
+    assert key.description["suggested_value"] == capacity
+    assert key.default is vol.UNDEFINED
+    assert fields[key].config["min"] == 0
+    assert fields[key].config["max"] == 150
+    payload = await _payload(hass, aioclient_mock, entry)
+    assert payload["battery_capacity"] == capacity
+    assert payload["battery_capacity"] is not None
 
 
 async def test_all_twenty_optional_measurements_are_sent(hass, aioclient_mock):
@@ -169,7 +209,7 @@ async def test_invalid_optional_value_does_not_block_voltages(hass, aioclient_mo
     assert payload["l1_v"] == 230
 
 
-@pytest.mark.parametrize("capacity", [0, -1, float("nan"), float("inf")])
+@pytest.mark.parametrize("capacity", [-0.01, -1, 150.01, 151, float("nan"), float("inf"), -float("inf")])
 async def test_invalid_saved_capacity_is_omitted(hass, aioclient_mock, capacity):
     payload = await _payload(hass, aioclient_mock, _entry(hass, capacity=capacity))
     assert "battery_capacity" not in payload
@@ -218,11 +258,12 @@ async def test_options_restore_and_clear_new_fields(hass, aioclient_mock):
 
 
 @pytest.mark.parametrize("field,initial", [
-    ("battery_capacity", 12.5), ("plant_capacity_kwp", 9.8), ("smartmeter_model", "Meter A"),
+    ("battery_capacity", 0), ("battery_capacity", 12.5), ("plant_capacity_kwp", 9.8), ("smartmeter_model", "Meter A"),
 ])
 async def test_cleared_static_field_is_transmitted_as_json_null(hass, aioclient_mock, field, initial):
     entry = _entry(hass, STANDARD | ADVANCED)
     saved = {**entry.data, "battery_capacity": 12.5, "plant_capacity_kwp": 9.8, "smartmeter_model": "Meter A"}
+    saved[field] = initial
     hass.config_entries.async_update_entry(entry, data=saved)
     result = await hass.config_entries.options.async_init(entry.entry_id)
     form = {"api_url": URL, "phase_voltages": PHASES,

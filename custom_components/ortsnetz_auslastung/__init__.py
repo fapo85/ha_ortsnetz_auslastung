@@ -63,7 +63,7 @@ def _add_optional_measurements(hass: HomeAssistant, data: dict, payload: dict) -
     if CONF_BATTERY_CAPACITY in data and capacity is None:
         payload[CONF_BATTERY_CAPACITY] = None
     elif capacity is not None:
-        if isinstance(capacity, (int, float)) and math.isfinite(capacity) and capacity > 0:
+        if isinstance(capacity, (int, float)) and math.isfinite(capacity) and 0 <= capacity <= 150:
             payload[CONF_BATTERY_CAPACITY] = capacity
         else:
             _LOGGER.warning("Batteriekapazität ist ungültig und wird nicht gesendet")

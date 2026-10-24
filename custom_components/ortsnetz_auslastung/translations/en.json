@@ -1,4 +1,11 @@
 {
+  "selector": {
+    "phase_sensor": {
+      "options": {
+        "-1": "Phase not measured (-1)"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "voltage_status": {
@@ -38,7 +45,7 @@
         },
         "data_description": {
           "smartmeter_model": "Select a model or enter your own name (maximum 120 characters). Optional; the list does not guarantee compatibility.",
-          "battery_capacity": "Enter the actual usable capacity, not the current energy content.",
+          "battery_capacity": "Enter the usable capacity from 0 to 150 kWh, not the current energy content.",
           "grid_power_w_entity": "At the grid connection: positive = import, negative = export. Do not select inverter output power."
         },
         "sections": {
@@ -82,7 +89,7 @@
       "no_measured_phase": "At least one phase must be assigned to a voltage sensor.",
       "invalid_smartmeter_model": "Use at most 120 characters for the manufacturer and model.",
       "invalid_api_url": "Enter a valid HTTPS URL.",
-      "invalid_battery_capacity": "Enter a valid battery capacity greater than 0 kWh."
+      "invalid_battery_capacity": "Enter a valid battery capacity between 0 and 150 kWh (inclusive)."
     }
   },
   "options": {
@@ -104,7 +111,7 @@
         },
         "data_description": {
           "smartmeter_model": "Select a model or enter your own name (maximum 120 characters). Optional; the list does not guarantee compatibility.",
-          "battery_capacity": "Enter the actual usable capacity, not the current energy content.",
+          "battery_capacity": "Enter the usable capacity from 0 to 150 kWh, not the current energy content.",
           "grid_power_w_entity": "At the grid connection: positive = import, negative = export. Do not select inverter output power."
         },
         "sections": {
@@ -148,7 +155,7 @@
       "no_measured_phase": "At least one phase must be assigned to a voltage sensor.",
       "invalid_smartmeter_model": "Use at most 120 characters for the manufacturer and model.",
       "invalid_api_url": "Enter a valid HTTPS URL.",
-      "invalid_battery_capacity": "Enter a valid battery capacity greater than 0 kWh."
+      "invalid_battery_capacity": "Enter a valid battery capacity between 0 and 150 kWh (inclusive)."
     }
   }
 }
